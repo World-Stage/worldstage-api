@@ -11,19 +11,9 @@ spring:
 
 cors:
   allowed-headers:
-    - Origin
-    - Content-Type
-    - Accept
-    - Authorization
-    - Accept-Language
-    - Accept-Encoding
-    - Client-Id
-    - Platform
-    - Access-Control-Allow-Headers
-    - Access-Control-Allow-Origin
+    - "*"
   exposed-headers:
     - Location
     - Access-Control-Allow-Origin
   allowed-origins:
-    - http://localhost:3000
-    - http://localhost:5173
+    - "*"
