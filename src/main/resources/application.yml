@@ -1,0 +1,29 @@
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-exception: false
+  tomcat:
+    relaxed-query-chars: '|,{,},[,]'
+  port: 8082
+
+spring:
+  profiles:
+    active: test
+  mvc:
+    log-request-details: true
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  flyway:
+    defaultSchema: edge
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
