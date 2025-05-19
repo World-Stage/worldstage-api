@@ -1,7 +1,10 @@
 package com.jonathanfletcher.worldstage_api.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jonathanfletcher.worldstage_api.controller.StreamSseController;
 import com.jonathanfletcher.worldstage_api.model.StreamStatus;
 import com.jonathanfletcher.worldstage_api.model.entity.Stream;
+import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
 import com.jonathanfletcher.worldstage_api.repository.StreamRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,10 @@ public class StreamQueueService {
     private ScheduledFuture<?> timerTask;
 
     private TaskScheduler scheduler;
+
+    private final StreamSseController streamSseController;
+
+    private final ObjectMapper objectMapper;
 
     @PostConstruct
     public void init() {
@@ -75,7 +82,7 @@ public class StreamQueueService {
             currentStream.setActive(true);
             streamRepository.save(currentStream);
             log.info("Started new stream: {}", currentStream.getId());
-
+            streamSseController.notifyNewActiveStream(objectMapper.convertValue(next, StreamResponse.class));
         } else {
             log.info("No other stream in queue. Extending current stream.");
         }
