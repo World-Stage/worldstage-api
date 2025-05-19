@@ -49,6 +49,11 @@ public class StreamQueueService {
             if (stream.getId().equals(currentStream.getId()) && !streamQueue.isEmpty()) {
                 // start next stream if current stream disconnects
                 startNextStream();
+            } else if (stream.getId().equals(currentStream.getId())) {
+                // Current stream is the one we are ending and no stream in queue, cancel timer
+                log.info("No stream in queue to replace current stream, cancelling timer");
+                timerTask.cancel(true);
+                currentStream = null;
             }
             log.info("Successfully removed stream {} from queue", stream.getId());
         } catch (Exception e) {
@@ -71,11 +76,10 @@ public class StreamQueueService {
             streamRepository.save(currentStream);
             log.info("Started new stream: {}", currentStream.getId());
 
-            timerTask = scheduler.schedule(this::onTimerExpired, Instant.now().plusSeconds(15));
         } else {
             log.info("No other stream in queue. Extending current stream.");
-            timerTask = scheduler.schedule(this::onTimerExpired, Instant.now().plusSeconds(15));
         }
+        timerTask = scheduler.schedule(this::onTimerExpired, Instant.now().plusSeconds(15));
     }
 
     private synchronized void onTimerExpired() {
