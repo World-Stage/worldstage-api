@@ -2,6 +2,8 @@ package com.jonathanfletcher.worldstage_api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jonathanfletcher.worldstage_api.controller.StreamSseController;
+import com.jonathanfletcher.worldstage_api.model.ChatMessage;
+import com.jonathanfletcher.worldstage_api.model.MessageType;
 import com.jonathanfletcher.worldstage_api.model.StreamStatus;
 import com.jonathanfletcher.worldstage_api.model.entity.Stream;
 import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
@@ -9,6 +11,7 @@ import com.jonathanfletcher.worldstage_api.repository.StreamRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,8 @@ public class StreamQueueService {
     private final StreamSseController streamSseController;
 
     private final ObjectMapper objectMapper;
+
+    private final SimpMessagingTemplate messagingTemplate;
 
     @PostConstruct
     public void init() {
@@ -83,6 +88,14 @@ public class StreamQueueService {
             streamRepository.save(currentStream);
             log.info("Started new stream: {}", currentStream.getId());
             streamSseController.notifyNewActiveStream(objectMapper.convertValue(next, StreamResponse.class));
+
+            // 🟢 Send system chat message
+            ChatMessage systemMessage = ChatMessage.builder()
+                    .content("Starting next stream")
+                    .messageType(MessageType.SYSTEM)
+                    .timestamp(Instant.now())
+                    .build();
+            messagingTemplate.convertAndSend("/topic/messages", systemMessage);
         } else {
             log.info("No other stream in queue. Extending current stream.");
         }
