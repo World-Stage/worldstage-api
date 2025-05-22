@@ -8,12 +8,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @RestController
-@RequestMapping(path = "/stream/view")
+@RequestMapping(path = "/stream/view") //TODO Probably change view to active as we want to subscribe to active
 public class StreamSseController {
 
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
@@ -33,13 +34,22 @@ public class StreamSseController {
 
     public void notifyNewActiveStream(StreamResponse streamResponse) {
         log.info("Sending SSE for new active stream to {} subscribers", emitters.size());
+        emitMessage("new-stream", streamResponse);
+    }
+
+    public void notifyUpdatedTimer(Instant expiration) {
+        log.info("Sending SSE for updated stream expiration {}", expiration.getEpochSecond());
+        emitMessage("stream-expiration", expiration.getEpochSecond());
+    }
+
+    private <T> void emitMessage(String name, T data) {
         List<SseEmitter> deadEmitters = new java.util.ArrayList<>();
 
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event()
-                        .name("new-stream")
-                        .data(streamResponse));
+                        .name(name)
+                        .data(data));
             } catch (IOException e) {
                 log.warn("Removing {} dead emitter", deadEmitters.size());
                 deadEmitters.add(emitter);

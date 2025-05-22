@@ -2,6 +2,7 @@ package com.jonathanfletcher.worldstage_api.controller;
 
 import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
 import com.jonathanfletcher.worldstage_api.service.StreamService;
+import com.jonathanfletcher.worldstage_api.service.WebSocketViewerTracker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,8 @@ import java.util.UUID;
 public class StreamController {
 
     private final StreamService streamService;
+
+    private final WebSocketViewerTracker webSocketViewerTracker;
 
     @PostMapping("/publish")
     public ResponseEntity<StreamResponse> publishStream(@RequestParam Map<String, String> queryParams) {
@@ -46,5 +49,10 @@ public class StreamController {
     public ResponseEntity<StreamResponse> getStream(@PathVariable UUID streamId) {
         log.info("Fetching stream {}", streamId);
         return ResponseEntity.ok(streamService.getStream(streamId));
+    }
+
+    @GetMapping("/view/count")
+    public ResponseEntity<Map<String, Integer>> getViewerCount() {
+        return ResponseEntity.ok(Map.of("viewerCount", webSocketViewerTracker.getViewerCount()));
     }
 }
