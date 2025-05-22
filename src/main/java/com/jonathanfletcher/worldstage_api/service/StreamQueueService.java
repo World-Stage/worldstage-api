@@ -99,7 +99,9 @@ public class StreamQueueService {
         } else {
             log.info("No other stream in queue. Extending current stream.");
         }
-        timerTask = scheduler.schedule(this::onTimerExpired, Instant.now().plusSeconds(15));
+        Instant newStreamExpiration = Instant.now().plusSeconds(15); //TODO Calculate this
+        timerTask = scheduler.schedule(this::onTimerExpired, newStreamExpiration);
+        streamSseController.notifyUpdatedTimer(newStreamExpiration);
     }
 
     private synchronized void onTimerExpired() {
