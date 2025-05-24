@@ -40,6 +40,8 @@ public class StreamQueueService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
+    private final EncoreService encoreService;
+
     @PostConstruct
     public void init() {
         ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
@@ -96,6 +98,9 @@ public class StreamQueueService {
                     .timestamp(Instant.now())
                     .build();
             messagingTemplate.convertAndSend("/topic/messages", systemMessage);
+
+            // Reset Encore Metrics for next stream
+            encoreService.resetForNewStream();
         } else {
             log.info("No other stream in queue. Extending current stream.");
         }

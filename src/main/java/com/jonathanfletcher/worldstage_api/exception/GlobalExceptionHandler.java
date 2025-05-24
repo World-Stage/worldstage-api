@@ -18,6 +18,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.Date;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
@@ -49,6 +50,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleNoSuchElementFoundException(EntityNotFoundException exception,
                                                                     ServletWebRequest webRequest) {
         return buildErrorResponse(exception, HttpStatus.NOT_FOUND, webRequest);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<Object> handleNoSuchElementException(NoSuchElementException exception, ServletWebRequest webRequest) {
+
+        return buildErrorResponse(exception, HttpStatus.BAD_REQUEST, webRequest);
     }
 
     private ResponseEntity<Object> buildErrorResponse(Exception exception, HttpStatusCode httpStatus, ServletWebRequest webRequest) {

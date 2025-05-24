@@ -11,7 +11,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebsocketConfiguration implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/chat").setAllowedOriginPatterns(
+        registry.addEndpoint("/chat", "/encore").setAllowedOriginPatterns(
                 "http://localhost:80",
                 "http://localhost",
                 "http://localhost:3000"
