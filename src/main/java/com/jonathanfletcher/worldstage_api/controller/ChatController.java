@@ -12,7 +12,7 @@ import java.time.Instant;
 public class ChatController {
 
     @MessageMapping("/send") // from frontend /app/send
-    @SendTo("/topic/messages")
+    @SendTo("/chat/messages")
     public ChatMessage handleMessage(ChatMessage message) {
 
         if (message.getMessageType() == null) {

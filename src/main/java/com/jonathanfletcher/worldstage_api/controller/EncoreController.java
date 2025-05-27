@@ -22,7 +22,7 @@ public class EncoreController {
     private final StreamQueueService streamQueueService;
 
     @MessageMapping("/encore")
-    @SendTo("/topic/encore")
+    @SendTo("/encore")
     public EncoreMetrics handleEncore(EncoreRequest request) {
         log.info("User {} is requesting an encore", request.getUserId());
 
