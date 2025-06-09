@@ -88,52 +88,59 @@ public class StreamQueueService {
             timerTask.cancel(false);
         }
 
-        Instant newStreamExpiration = Instant.now().plusSeconds(15); //TODO Calculate this
+        Stream next = streamQueue.poll();
+        if (next != null) {
+            currentStream = next;
+            currentStream.setStatus(StreamStatus.ACTIVE);
+            currentStream.setActive(true);
+            streamRepository.save(currentStream);
+            log.info("Started new stream: {}", currentStream.getId());
+            streamSseController.notifyNewActiveStream(objectMapper.convertValue(next, StreamResponse.class));
 
-        if (encoreExtensionTime != null) {
-            newStreamExpiration = Instant.now().plusSeconds(encoreExtensionTime);
-            encoreExtensionTime = null; //Reset extension time
+            // Reset Encore Metrics for next stream
+            encoreService.resetForNewStream();
+            extensionLevel = 0;
+
+            // 🟢 Send system chat message
+            ChatMessage systemMessage = ChatMessage.builder()
+                    .content("Starting next stream")
+                    .messageType(MessageType.SYSTEM)
+                    .timestamp(Instant.now())
+                    .build();
+            messagingTemplate.convertAndSend("/chat/messages", systemMessage);
         } else {
-            Stream next = streamQueue.poll();
-            if (next != null) {
-                currentStream = next;
-                currentStream.setStatus(StreamStatus.ACTIVE);
-                currentStream.setActive(true);
-                streamRepository.save(currentStream);
-                log.info("Started new stream: {}", currentStream.getId());
-                streamSseController.notifyNewActiveStream(objectMapper.convertValue(next, StreamResponse.class));
-
-                // Reset Encore Metrics for next stream
-                encoreService.resetForNewStream();
-                extensionLevel = 0;
-
-                // 🟢 Send system chat message
-                ChatMessage systemMessage = ChatMessage.builder()
-                        .content("Starting next stream")
-                        .messageType(MessageType.SYSTEM)
-                        .timestamp(Instant.now())
-                        .build();
-                messagingTemplate.convertAndSend("/chat/messages", systemMessage);
-            } else {
-                log.info("No other stream in queue. Extending current stream.");
-            }
+            log.info("No other stream in queue. Extending current stream.");
         }
 
-        timerTask = scheduler.schedule(this::onTimerExpired, newStreamExpiration);
-        streamSseController.notifyUpdatedTimer(newStreamExpiration);
+        Instant newStreamExpiration = Instant.now().plusSeconds(15); //TODO Calculate this
+        updateStreamTimer(newStreamExpiration);
     }
 
     private synchronized void onTimerExpired() {
         log.info("Timer expired for stream: {}", currentStream.getStreamKey());
+        if (encoreExtensionTime != null) {
+            if (timerTask != null) {
+                timerTask.cancel(false);
+            }
+            Instant newStreamExpiration = Instant.now().plusSeconds(encoreExtensionTime);
+            encoreExtensionTime = null; //Reset extension time
+            updateStreamTimer(newStreamExpiration);
 
-        if (!streamQueue.isEmpty()) {
-            currentStream.setActive(false);
-            currentStream.setStatus(StreamStatus.ENDED);
-            streamRepository.save(currentStream);
-            currentStream = null;
+        } else {
+            if (!streamQueue.isEmpty()) {
+                currentStream.setActive(false);
+                currentStream.setStatus(StreamStatus.ENDED);
+                streamRepository.save(currentStream);
+                currentStream = null;
+            }
+
+            startNextStream();
         }
+    }
 
-        startNextStream();
+    private synchronized void updateStreamTimer(Instant extensionTime) {
+        timerTask = scheduler.schedule(this::onTimerExpired, extensionTime);
+        streamSseController.notifyUpdatedTimer(extensionTime);
     }
 
     public synchronized void extendCurrentStream() {
