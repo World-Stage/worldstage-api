@@ -12,8 +12,6 @@ spring:
     active: test
   mvc:
     log-request-details: true
-  main:
-    allow-circular-references: true
   servlet:
     multipart:
       max-file-size: 20MB
