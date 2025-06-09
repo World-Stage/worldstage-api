@@ -41,6 +41,6 @@ public class WebSocketViewerTracker {
     }
 
     private void broadcastViewerCount() {
-        messagingTemplate.convertAndSend("/topic/viewers", sessionIds.size());
+        messagingTemplate.convertAndSend("/chat/viewers", sessionIds.size());
     }
 }

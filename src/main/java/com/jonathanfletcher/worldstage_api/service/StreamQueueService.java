@@ -40,6 +40,17 @@ public class StreamQueueService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
+    private final EncoreService encoreService;
+
+    private int extensionLevel = 0;
+    private Integer encoreExtensionTime;
+
+    private static final int[] extensionSteps = {30, 60, 120, 240}; // Seconds
+    private static final int maxExtension = 300;
+
+    // Add this flag to ensure only one extension per encore cycle
+    private boolean encoreExtensionTriggered = false;
+
     @PostConstruct
     public void init() {
         ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
@@ -55,16 +66,16 @@ public class StreamQueueService {
         }
     }
 
-    public synchronized void  removeStreamFromQueue(Stream stream) {
+    public synchronized void removeStreamFromQueue(Stream stream) {
         try {
             streamQueue.remove(stream);
             if (stream.getId().equals(currentStream.getId()) && !streamQueue.isEmpty()) {
-                // start next stream if current stream disconnects
                 startNextStream();
             } else if (stream.getId().equals(currentStream.getId())) {
-                // Current stream is the one we are ending and no stream in queue, cancel timer
                 log.info("No stream in queue to replace current stream, cancelling timer");
-                timerTask.cancel(true);
+                if (timerTask != null) {
+                    timerTask.cancel(true);
+                }
                 currentStream = null;
             }
             log.info("Successfully removed stream {} from queue", stream.getId());
@@ -79,50 +90,80 @@ public class StreamQueueService {
             timerTask.cancel(false);
         }
 
-        Stream next = streamQueue.poll();
+        encoreService.resetEncore();
+        extensionLevel = 0;
+        encoreExtensionTime = null;
+        encoreExtensionTriggered = false;  // 🆕 Reset flag for new cycle
 
+        Stream next = streamQueue.poll();
         if (next != null) {
             currentStream = next;
             currentStream.setStatus(StreamStatus.ACTIVE);
             currentStream.setActive(true);
             streamRepository.save(currentStream);
             log.info("Started new stream: {}", currentStream.getId());
+
             streamSseController.notifyNewActiveStream(objectMapper.convertValue(next, StreamResponse.class));
 
-            // 🟢 Send system chat message
             ChatMessage systemMessage = ChatMessage.builder()
                     .content("Starting next stream")
                     .messageType(MessageType.SYSTEM)
                     .timestamp(Instant.now())
                     .build();
-            messagingTemplate.convertAndSend("/topic/messages", systemMessage);
+            messagingTemplate.convertAndSend("/chat/messages", systemMessage);
         } else {
             log.info("No other stream in queue. Extending current stream.");
         }
-        Instant newStreamExpiration = Instant.now().plusSeconds(15); //TODO Calculate this
-        timerTask = scheduler.schedule(this::onTimerExpired, newStreamExpiration);
-        streamSseController.notifyUpdatedTimer(newStreamExpiration);
+
+        Instant newStreamExpiration = Instant.now().plusSeconds(15);
+        updateStreamTimer(newStreamExpiration);
     }
 
     private synchronized void onTimerExpired() {
         log.info("Timer expired for stream: {}", currentStream.getStreamKey());
+        if (encoreExtensionTime != null) {
+            if (timerTask != null) {
+                timerTask.cancel(false);
+            }
+            Instant newStreamExpiration = Instant.now().plusSeconds(encoreExtensionTime);
+            encoreExtensionTime = null;
+            updateStreamTimer(newStreamExpiration);
+            encoreService.resetEncore();
+            encoreExtensionTriggered = false;
+        } else {
+            if (!streamQueue.isEmpty()) {
+                currentStream.setActive(false);
+                currentStream.setStatus(StreamStatus.ENDED);
+                streamRepository.save(currentStream);
+                currentStream = null;
+            }
 
-        if (!streamQueue.isEmpty()) {
-            currentStream.setActive(false);
-            currentStream.setStatus(StreamStatus.ENDED);
-            streamRepository.save(currentStream);
-            currentStream = null;
+            startNextStream();
         }
-
-        startNextStream();
     }
 
-    public synchronized void extendCurrentStream(int seconds) {
-        if (timerTask != null) {
-            timerTask.cancel(false);
+    private synchronized void updateStreamTimer(Instant extensionTime) {
+        timerTask = scheduler.schedule(this::onTimerExpired, extensionTime);
+        streamSseController.notifyUpdatedTimer(extensionTime);
+    }
+
+    public synchronized void extendCurrentStream() {
+        // Only extend if not already extended in this cycle
+        if (!encoreExtensionTriggered) {
+            int extensionSeconds;
+            if (extensionLevel < extensionSteps.length) {
+                extensionSeconds = extensionSteps[extensionLevel];
+            } else {
+                extensionSeconds = maxExtension;
+            }
+
+            extensionLevel++;
+            log.info("Extending current stream: {} by {}s", currentStream.getId(), extensionSeconds);
+            encoreExtensionTime = extensionSeconds;
+            encoreExtensionTriggered = true;  // 🆕 Mark as extended for this cycle
+        } else {
+            log.info("Encore extension already triggered for this cycle. Skipping extension.");
         }
-        log.info("Extending current stream: {} by {}s", currentStream.getId(), seconds);
-        timerTask = scheduler.schedule(this::onTimerExpired, Instant.now().plusSeconds(seconds));
     }
 
     public Stream getCurrentStream() {
