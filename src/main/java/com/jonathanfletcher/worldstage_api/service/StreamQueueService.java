@@ -43,11 +43,13 @@ public class StreamQueueService {
     private final EncoreService encoreService;
 
     private int extensionLevel = 0;
-
     private Integer encoreExtensionTime;
 
     private static final int[] extensionSteps = {30, 60, 120, 240}; // Seconds
     private static final int maxExtension = 300;
+
+    // Add this flag to ensure only one extension per encore cycle
+    private boolean encoreExtensionTriggered = false;
 
     @PostConstruct
     public void init() {
@@ -68,12 +70,12 @@ public class StreamQueueService {
         try {
             streamQueue.remove(stream);
             if (stream.getId().equals(currentStream.getId()) && !streamQueue.isEmpty()) {
-                // start next stream if current stream disconnects
                 startNextStream();
             } else if (stream.getId().equals(currentStream.getId())) {
-                // Current stream is the one we are ending and no stream in queue, cancel timer
                 log.info("No stream in queue to replace current stream, cancelling timer");
-                timerTask.cancel(true);
+                if (timerTask != null) {
+                    timerTask.cancel(true);
+                }
                 currentStream = null;
             }
             log.info("Successfully removed stream {} from queue", stream.getId());
@@ -87,10 +89,11 @@ public class StreamQueueService {
         if (timerTask != null) {
             timerTask.cancel(false);
         }
-        // Reset Encore Metrics for next stream
+
         encoreService.resetEncore();
         extensionLevel = 0;
-        encoreExtensionTime = null; //Reset extension time
+        encoreExtensionTime = null;
+        encoreExtensionTriggered = false;  // 🆕 Reset flag for new cycle
 
         Stream next = streamQueue.poll();
         if (next != null) {
@@ -99,10 +102,9 @@ public class StreamQueueService {
             currentStream.setActive(true);
             streamRepository.save(currentStream);
             log.info("Started new stream: {}", currentStream.getId());
+
             streamSseController.notifyNewActiveStream(objectMapper.convertValue(next, StreamResponse.class));
 
-
-            // 🟢 Send system chat message
             ChatMessage systemMessage = ChatMessage.builder()
                     .content("Starting next stream")
                     .messageType(MessageType.SYSTEM)
@@ -113,7 +115,7 @@ public class StreamQueueService {
             log.info("No other stream in queue. Extending current stream.");
         }
 
-        Instant newStreamExpiration = Instant.now().plusSeconds(15); //TODO Calculate this
+        Instant newStreamExpiration = Instant.now().plusSeconds(15);
         updateStreamTimer(newStreamExpiration);
     }
 
@@ -124,9 +126,10 @@ public class StreamQueueService {
                 timerTask.cancel(false);
             }
             Instant newStreamExpiration = Instant.now().plusSeconds(encoreExtensionTime);
-            encoreExtensionTime = null; //Reset extension time
+            encoreExtensionTime = null;
             updateStreamTimer(newStreamExpiration);
             encoreService.resetEncore();
+            encoreExtensionTriggered = false;
         } else {
             if (!streamQueue.isEmpty()) {
                 currentStream.setActive(false);
@@ -145,18 +148,22 @@ public class StreamQueueService {
     }
 
     public synchronized void extendCurrentStream() {
-        // Calculate extension time based on exponential backoff, capped at 5 minutes
-        int extensionSeconds;
-        if (extensionLevel < extensionSteps.length) {
-            extensionSeconds = extensionSteps[extensionLevel];
+        // Only extend if not already extended in this cycle
+        if (!encoreExtensionTriggered) {
+            int extensionSeconds;
+            if (extensionLevel < extensionSteps.length) {
+                extensionSeconds = extensionSteps[extensionLevel];
+            } else {
+                extensionSeconds = maxExtension;
+            }
+
+            extensionLevel++;
+            log.info("Extending current stream: {} by {}s", currentStream.getId(), extensionSeconds);
+            encoreExtensionTime = extensionSeconds;
+            encoreExtensionTriggered = true;  // 🆕 Mark as extended for this cycle
         } else {
-            extensionSeconds = maxExtension;
+            log.info("Encore extension already triggered for this cycle. Skipping extension.");
         }
-
-        extensionLevel++; // Increase for next round
-
-        log.info("Extending current stream: {} by {}s", currentStream.getId(), extensionSeconds);
-        encoreExtensionTime = extensionSeconds;
     }
 
     public Stream getCurrentStream() {
