@@ -18,8 +18,9 @@ public class EncoreService {
 
     private final Set<UUID> encoreUserIds = ConcurrentHashMap.newKeySet();
 
-    public void castVote(UUID userId) {
+    public EncoreMetrics castVote(UUID userId) {
         encoreUserIds.add(userId);
+        return getEncoreMetrics();
     }
 
     public EncoreMetrics getEncoreMetrics() {

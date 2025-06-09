@@ -42,6 +42,13 @@ public class StreamQueueService {
 
     private final EncoreService encoreService;
 
+    private int extensionLevel = 0;
+
+    private Integer encoreExtensionTime;
+
+    private static final int[] extensionSteps = {30, 60, 120, 240}; // Seconds
+    private static final int maxExtension = 300;
+
     @PostConstruct
     public void init() {
         ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
@@ -57,7 +64,7 @@ public class StreamQueueService {
         }
     }
 
-    public synchronized void  removeStreamFromQueue(Stream stream) {
+    public synchronized void removeStreamFromQueue(Stream stream) {
         try {
             streamQueue.remove(stream);
             if (stream.getId().equals(currentStream.getId()) && !streamQueue.isEmpty()) {
@@ -81,30 +88,36 @@ public class StreamQueueService {
             timerTask.cancel(false);
         }
 
-        Stream next = streamQueue.poll();
-
-        if (next != null) {
-            currentStream = next;
-            currentStream.setStatus(StreamStatus.ACTIVE);
-            currentStream.setActive(true);
-            streamRepository.save(currentStream);
-            log.info("Started new stream: {}", currentStream.getId());
-            streamSseController.notifyNewActiveStream(objectMapper.convertValue(next, StreamResponse.class));
-
-            // 🟢 Send system chat message
-            ChatMessage systemMessage = ChatMessage.builder()
-                    .content("Starting next stream")
-                    .messageType(MessageType.SYSTEM)
-                    .timestamp(Instant.now())
-                    .build();
-            messagingTemplate.convertAndSend("/topic/messages", systemMessage);
-
-            // Reset Encore Metrics for next stream
-            encoreService.resetForNewStream();
-        } else {
-            log.info("No other stream in queue. Extending current stream.");
-        }
         Instant newStreamExpiration = Instant.now().plusSeconds(15); //TODO Calculate this
+
+        if (encoreExtensionTime != null) {
+            newStreamExpiration = Instant.now().plusSeconds(encoreExtensionTime);
+            encoreExtensionTime = null; //Reset extension time
+        } else {
+            Stream next = streamQueue.poll();
+            if (next != null) {
+                currentStream = next;
+                currentStream.setStatus(StreamStatus.ACTIVE);
+                currentStream.setActive(true);
+                streamRepository.save(currentStream);
+                log.info("Started new stream: {}", currentStream.getId());
+                streamSseController.notifyNewActiveStream(objectMapper.convertValue(next, StreamResponse.class));
+
+                // Reset Encore Metrics for next stream
+                encoreService.resetForNewStream();
+
+                // 🟢 Send system chat message
+                ChatMessage systemMessage = ChatMessage.builder()
+                        .content("Starting next stream")
+                        .messageType(MessageType.SYSTEM)
+                        .timestamp(Instant.now())
+                        .build();
+                messagingTemplate.convertAndSend("/chat/messages", systemMessage);
+            } else {
+                log.info("No other stream in queue. Extending current stream.");
+            }
+        }
+
         timerTask = scheduler.schedule(this::onTimerExpired, newStreamExpiration);
         streamSseController.notifyUpdatedTimer(newStreamExpiration);
     }
@@ -122,12 +135,19 @@ public class StreamQueueService {
         startNextStream();
     }
 
-    public synchronized void extendCurrentStream(int seconds) {
-        if (timerTask != null) {
-            timerTask.cancel(false);
+    public synchronized void extendCurrentStream() {
+        // Calculate extension time based on exponential backoff, capped at 5 minutes
+        int extensionSeconds;
+        if (extensionLevel < extensionSteps.length) {
+            extensionSeconds = extensionSteps[extensionLevel];
+        } else {
+            extensionSeconds = maxExtension;
         }
-        log.info("Extending current stream: {} by {}s", currentStream.getId(), seconds);
-        timerTask = scheduler.schedule(this::onTimerExpired, Instant.now().plusSeconds(seconds));
+
+        extensionLevel++; // Increase for next round
+
+        log.info("Extending current stream: {} by {}s", currentStream.getId(), extensionSeconds);
+        encoreExtensionTime = extensionSeconds;
     }
 
     public Stream getCurrentStream() {

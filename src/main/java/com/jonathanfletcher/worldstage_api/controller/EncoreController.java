@@ -31,8 +31,13 @@ public class EncoreController {
             throw new NoSuchElementException("There is currently no active stream");
         }
 
-        encoreService.castVote(request.getUserId());
+        EncoreMetrics metrics = encoreService.castVote(request.getUserId());
 
-        return encoreService.getEncoreMetrics();
+        if (metrics.getEncoreProgressPercent() >= 100) {
+            log.info("Encore progression reach. Extending current stream");
+            streamQueueService.extendCurrentStream();
+        }
+
+        return metrics;
     }
 }
