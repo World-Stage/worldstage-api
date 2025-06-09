@@ -105,6 +105,7 @@ public class StreamQueueService {
 
                 // Reset Encore Metrics for next stream
                 encoreService.resetForNewStream();
+                extensionLevel = 0;
 
                 // 🟢 Send system chat message
                 ChatMessage systemMessage = ChatMessage.builder()
