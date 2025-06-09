@@ -9,7 +9,7 @@ import lombok.Data;
 public class EncoreMetrics {
     private int encoreTotal;
 
-    private int encoreNeeded;
+    private Integer encoreNeeded;
 
     private int encoreProgressPercent;
 }

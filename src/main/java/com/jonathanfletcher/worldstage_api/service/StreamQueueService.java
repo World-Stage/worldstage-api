@@ -87,6 +87,10 @@ public class StreamQueueService {
         if (timerTask != null) {
             timerTask.cancel(false);
         }
+        // Reset Encore Metrics for next stream
+        encoreService.resetEncore();
+        extensionLevel = 0;
+        encoreExtensionTime = null; //Reset extension time
 
         Stream next = streamQueue.poll();
         if (next != null) {
@@ -97,9 +101,6 @@ public class StreamQueueService {
             log.info("Started new stream: {}", currentStream.getId());
             streamSseController.notifyNewActiveStream(objectMapper.convertValue(next, StreamResponse.class));
 
-            // Reset Encore Metrics for next stream
-            encoreService.resetForNewStream();
-            extensionLevel = 0;
 
             // 🟢 Send system chat message
             ChatMessage systemMessage = ChatMessage.builder()
@@ -125,7 +126,7 @@ public class StreamQueueService {
             Instant newStreamExpiration = Instant.now().plusSeconds(encoreExtensionTime);
             encoreExtensionTime = null; //Reset extension time
             updateStreamTimer(newStreamExpiration);
-
+            encoreService.resetEncore();
         } else {
             if (!streamQueue.isEmpty()) {
                 currentStream.setActive(false);

@@ -3,6 +3,7 @@ package com.jonathanfletcher.worldstage_api.service;
 import com.jonathanfletcher.worldstage_api.model.EncoreMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -17,6 +18,8 @@ public class EncoreService {
     private final WebSocketViewerTracker webSocketViewerTracker;
 
     private final Set<UUID> encoreUserIds = ConcurrentHashMap.newKeySet();
+
+    private final SimpMessagingTemplate messagingTemplate;
 
     public EncoreMetrics castVote(UUID userId) {
         encoreUserIds.add(userId);
@@ -44,8 +47,14 @@ public class EncoreService {
                 .build();
     }
 
-    public void resetForNewStream() {
+    public void resetEncore() {
         encoreUserIds.clear();
+        messagingTemplate.convertAndSend("/encore", EncoreMetrics.builder()
+                .encoreTotal(0)
+                .encoreNeeded(null)
+                .encoreProgressPercent(0)
+                .build()
+        );
     }
 
     public boolean hasUserEncore(UUID userId) {
