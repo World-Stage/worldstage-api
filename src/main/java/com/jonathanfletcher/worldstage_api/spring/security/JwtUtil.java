@@ -13,10 +13,7 @@ import jakarta.servlet.http.Cookie;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,9 +43,9 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String generateRefreshToken(String username, String familyId) {
+    public String generateRefreshToken(String username, UUID familyId) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("familyId", familyId);
+        claims.put("familyId", familyId.toString());
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
@@ -83,14 +80,14 @@ public class JwtUtil {
         }
     }
 
-    public String getFamilyIdFromRefreshToken(String token) {
+    public UUID getFamilyIdFromRefreshToken(String token) {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(refreshKey)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-            return claims.get("familyId", String.class);
+            return claims.get("familyId", UUID.class);
         } catch (Exception e) {
             log.warn("Invalid refresh token: {}", e.getMessage());
             return null;

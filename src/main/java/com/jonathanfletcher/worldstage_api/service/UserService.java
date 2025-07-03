@@ -28,7 +28,7 @@ public class UserService {
 
     private final ObjectMapper objectMapper;
 
-    public UserResponse registerUser(UserCreateRequest request) {
+public UserResponse registerUser(UserCreateRequest request) {
         User newUser = User.builder()
                 .id(UUID.randomUUID())
                 .username(request.getUsername())
