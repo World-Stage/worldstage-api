@@ -21,19 +21,6 @@ public class Role {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
+    @Column(unique = true, nullable = false)
     private ERole name;
-
-    @ManyToMany(mappedBy = "roles")
-    @ToString.Exclude
-    private Collection<User> users;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "roles_privileges",
-        schema = "edge",
-        joinColumns = @JoinColumn(
-            name = "role_id", referencedColumnName = "id"),
-        inverseJoinColumns = @JoinColumn(
-            name = "privilege_id", referencedColumnName = "id"))
-    private Collection<Privilege> privileges;
 }
