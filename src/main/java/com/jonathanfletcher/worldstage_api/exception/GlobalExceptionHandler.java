@@ -62,7 +62,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({EntityConflictException.class, HttpClientErrorException.Conflict.class})
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseEntity<Object> handleConflictEntityException(EntityConflictException exception, ServletWebRequest webRequest) {
+    public ResponseEntity<Object> handleConflictEntityException(Exception exception, ServletWebRequest webRequest) {
         return buildErrorResponse(exception, HttpStatus.CONFLICT, webRequest);
     }
 
