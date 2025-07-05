@@ -7,6 +7,7 @@ import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
@@ -87,7 +88,8 @@ public class JwtUtil {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-            return claims.get("familyId", UUID.class);
+            String familyId = claims.get("familyId", String.class);
+            return UUID.fromString(familyId);
         } catch (Exception e) {
             log.warn("Invalid refresh token: {}", e.getMessage());
             return null;
@@ -101,15 +103,29 @@ public class JwtUtil {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
+
             @SuppressWarnings("unchecked")
-            Set<String> roles = (Set<String>) claims.get("roles");
-            return roles;
+            List<String> rolesList = claims.get("roles", List.class);
+
+            return new HashSet<>(rolesList);
         } catch (Exception e) {
             log.warn("Invalid access token: {}", e.getMessage());
             return Set.of();
         }
     }
 
+    @Profile("test")
+    public String generateExpiredRefresh(String username, UUID familyId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("familyId", familyId.toString());
+        return Jwts.builder()
+                .claims(claims)
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() - refreshTokenExpirationMs))
+                .signWith(refreshKey)
+                .compact();
+    }
     public boolean validateToken(String token, boolean isRefreshToken) {
         try {
             Jwts.parser()

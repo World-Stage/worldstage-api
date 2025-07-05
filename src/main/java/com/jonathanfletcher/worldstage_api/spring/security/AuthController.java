@@ -20,10 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -47,7 +45,7 @@ public class AuthController {
     private final UserDetailsServiceImpl userDetailsService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody UserCreateRequest registerRequest) {
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserCreateRequest registerRequest) {
         UserResponse registeredUser = userService.registerUser(registerRequest);
 
         log.info("User registered: {}", registerRequest.getUsername());
@@ -55,7 +53,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest authRequest, HttpServletResponse response) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest authRequest, HttpServletResponse response) {
         Optional<User> emailedUser = userRepository.findByEmail(authRequest.getUsername()); //Check if user used email
         String userAuth = emailedUser.map(value -> value.getUsername().toLowerCase())
                 .orElseGet(() -> authRequest.getUsername().toLowerCase());
@@ -63,7 +61,7 @@ public class AuthController {
                 userAuth, authRequest.getPassword()));
 
 
-        User user = (User) userDetailsService.loadUserByUsername(authRequest.getUsername());
+        User user = (User) userDetailsService.loadUserByUsername(userAuth);
         String accessToken = jwtUtil.generateAccessToken(user);
         UUID familyId = UUID.randomUUID();
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), familyId);
@@ -126,5 +124,13 @@ public class AuthController {
             }
         }
         return ResponseEntity.ok("Logged out successfully");
+    }
+
+    @GetMapping("/csrf")
+    public ResponseEntity<?> getCsrfToken(CsrfToken csrfToken) {
+        log.info("CSRF token requested");
+        return ResponseEntity.ok()
+                .header("X-CSRF-TOKEN", csrfToken.getToken())
+                .build();
     }
 }

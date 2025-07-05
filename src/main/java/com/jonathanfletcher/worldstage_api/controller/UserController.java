@@ -14,17 +14,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -35,5 +32,12 @@ public class UserController {
         log.info("A new user is trying to sign up with email: {}", request.getEmail());
 
         return ResponseEntity.ok(userService.registerUser(request));
+    }
+
+    @GetMapping(path = "/{userId}")
+    public ResponseEntity<UserResponse> getUser(@PathVariable UUID userId) {
+        log.info("Request received to get user {}", userId);
+
+        return ResponseEntity.ok(userService.getUser(userId));
     }
 }

@@ -1,5 +1,6 @@
 package com.jonathanfletcher.worldstage_api.spring.security.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.jonathanfletcher.worldstage_api.model.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,7 +20,6 @@ import java.util.UUID;
 @ToString
 public class RefreshToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private UUID id;
 
     @Column(nullable = false)
@@ -30,6 +30,7 @@ public class RefreshToken {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private User user;
 
     private Instant expiresAt;

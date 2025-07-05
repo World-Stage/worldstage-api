@@ -1,6 +1,8 @@
 package com.jonathanfletcher.worldstage_api.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.jonathanfletcher.worldstage_api.spring.security.model.entity.RefreshToken;
 import com.jonathanfletcher.worldstage_api.spring.security.model.entity.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
@@ -10,6 +12,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -54,6 +57,9 @@ public class User implements UserDetails {
                     name = "role_id", referencedColumnName = "id"))
     private Collection<Role> roles;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<RefreshToken> refreshTokens = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

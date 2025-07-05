@@ -1,6 +1,8 @@
 package com.jonathanfletcher.worldstage_api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jonathanfletcher.worldstage_api.exception.EntityConflictException;
+import com.jonathanfletcher.worldstage_api.exception.EntityNotFoundException;
 import com.jonathanfletcher.worldstage_api.model.entity.User;
 import com.jonathanfletcher.worldstage_api.model.request.UserCreateRequest;
 import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
@@ -28,23 +30,36 @@ public class UserService {
 
     private final ObjectMapper objectMapper;
 
-public UserResponse registerUser(UserCreateRequest request) {
-        User newUser = User.builder()
-                .id(UUID.randomUUID())
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .roles(Set.of(roleRepository.findByName(ERole.ROLE_USER.toString()).orElseGet(() -> {
-                    log.info("Creating new role: {}", ERole.ROLE_USER);
-                    return roleRepository.save(Role.builder()
-                            .id(UUID.randomUUID())
-                            .name(ERole.ROLE_USER)
-                            .build());
-                })))
-                .build();
+    public UserResponse registerUser(UserCreateRequest request) {
+        if (userRepository.existsByUsername(request.getUsername().toLowerCase())) {
+            throw new EntityConflictException(String.format("Username %s is already taken!", request.getUsername()));
+        }
 
-        User _user = userRepository.save(newUser);
+        if (userRepository.existsByEmail(request.getEmail().toLowerCase())) {
+            throw new EntityConflictException(String.format("Email %s is already being used!", request.getEmail()));
+        }
+            User newUser = User.builder()
+                    .id(UUID.randomUUID())
+                    .username(request.getUsername().toLowerCase())
+                    .email(request.getEmail().toLowerCase())
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .roles(Set.of(roleRepository.findByName(ERole.USER).orElseGet(() -> {
+                        log.info("Creating new role: {}", ERole.USER);
+                        return roleRepository.save(Role.builder()
+                                .id(UUID.randomUUID())
+                                .name(ERole.USER)
+                                .build());
+                    })))
+                    .build();
 
-        return objectMapper.convertValue(_user, UserResponse.class);
+            User _user = userRepository.save(newUser);
+
+            return objectMapper.convertValue(_user, UserResponse.class);
+    }
+
+    public UserResponse getUser(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        return objectMapper.convertValue(user, UserResponse.class);
     }
 }

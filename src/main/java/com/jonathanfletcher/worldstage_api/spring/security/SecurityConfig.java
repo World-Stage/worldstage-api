@@ -2,6 +2,7 @@ package com.jonathanfletcher.worldstage_api.spring.security;
 
 import com.jonathanfletcher.worldstage_api.property.CorsProperties;
 import com.jonathanfletcher.worldstage_api.spring.security.model.ERole;
+import com.jonathanfletcher.worldstage_api.spring.security.repository.StatelessCsrfTokenRepository;
 import com.jonathanfletcher.worldstage_api.spring.security.service.JwtAuthenticationFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,13 +44,14 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole(ERole.ROLE_ADMIN.toString())
+                        .requestMatchers("/admin/**").hasRole(ERole.ADMIN.toString())
                         .anyRequest().authenticated()
                 )
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers("/auth/login", "/auth/register")
-                )
+//                .csrf(csrf -> csrf
+//                        .csrfTokenRepository(new StatelessCsrfTokenRepository())
+//                        .ignoringRequestMatchers("/auth/login", "/auth/register")
+//                )
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> {
                     cors.configurationSource(corsConfigurationSource());
                 })
@@ -72,8 +74,8 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of("http://localhost", "http://localhost:80", "http://localhost:3000"));
         configuration.setAllowCredentials(true);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With"));
-        configuration.setExposedHeaders(List.of("Content-Type", "Access-Control-Allow-Origin"));
+        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With", "X-CSRF-TOKEN"));
+//        configuration.setExposedHeaders(List.of("Content-Type", "Access-Control-Allow-Origin"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

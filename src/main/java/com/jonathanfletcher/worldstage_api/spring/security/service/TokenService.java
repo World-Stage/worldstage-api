@@ -40,6 +40,7 @@ public class TokenService {
         refreshTokenRepository.deleteByUserAndFamilyId(user, familyId);
 
         RefreshToken refreshTokenEntity = RefreshToken.builder()
+                .id(UUID.randomUUID())
                 .tokenHash(tokenHash)
                 .familyId(familyId)
                 .expiresAt(expiresAt)
