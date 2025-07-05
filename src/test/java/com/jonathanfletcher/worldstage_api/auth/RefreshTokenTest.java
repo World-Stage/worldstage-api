@@ -28,11 +28,13 @@ public class RefreshTokenTest extends BaseTest {
     private String validRefreshToken;
     private UUID validFamilyId;
     private String validCsrfToken;
+
     private UserResponse user;
 
     @BeforeEach
     public void setup() {
         user = createUser();
+
         validFamilyId = UUID.randomUUID();
         validRefreshToken = jwtUtil.generateRefreshToken(user.getUsername(), validFamilyId);
         tokenService.storeRefreshToken(validRefreshToken, user.getUsername(), validFamilyId);

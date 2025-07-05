@@ -9,6 +9,7 @@ import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
 import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
 import com.jonathanfletcher.worldstage_api.repository.UserRepository;
 import com.jonathanfletcher.worldstage_api.spring.security.JwtUtil;
+import com.jonathanfletcher.worldstage_api.spring.security.repository.RefreshTokenRepository;
 import io.restassured.RestAssured;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.filter.Filter;
@@ -48,6 +49,9 @@ public abstract class BaseTest {
     UserRepository userRepository;
 
     @Autowired
+    RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
     JwtUtil jwtUtils;
 
     @Value("${spring.security.client.nginx.secret}")
@@ -57,14 +61,13 @@ public abstract class BaseTest {
     public void setUp() {
         RestAssured.port = serverPort;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-        RestAssured.config = RestAssured.config().objectMapperConfig(
-                new ObjectMapperConfig().jackson2ObjectMapperFactory((type, s) -> objectMapper
-                ));
+        RestAssured.replaceFiltersWith(Collections.emptyList());
     }
 
     @AfterEach
     public void strip() {
         userRepository.deleteAll();;
+        refreshTokenRepository.deleteAll();
     }
 
     protected void addAuth(UUID userId) {
