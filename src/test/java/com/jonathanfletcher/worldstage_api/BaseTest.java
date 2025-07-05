@@ -14,9 +14,11 @@ import io.restassured.config.ObjectMapperConfig;
 import io.restassured.filter.Filter;
 import io.restassured.http.ContentType;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
@@ -48,15 +50,21 @@ public abstract class BaseTest {
     @Autowired
     JwtUtil jwtUtils;
 
+    @Value("${spring.security.client.nginx.secret}")
+    protected String nginxSecret;
+
     @BeforeEach
     public void setUp() {
-        userRepository.deleteAll();
-
         RestAssured.port = serverPort;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         RestAssured.config = RestAssured.config().objectMapperConfig(
                 new ObjectMapperConfig().jackson2ObjectMapperFactory((type, s) -> objectMapper
                 ));
+    }
+
+    @AfterEach
+    public void strip() {
+        userRepository.deleteAll();;
     }
 
     protected void addAuth(UUID userId) {
@@ -79,6 +87,7 @@ public abstract class BaseTest {
     protected StreamResponse publishStream(UUID streamKey) {
         return given()
             .queryParam("name", streamKey)
+            .queryParam("secret", nginxSecret)
         .when()
             .post("/stream/publish")
         .then()

@@ -5,6 +5,8 @@ import com.jonathanfletcher.worldstage_api.service.StreamService;
 import com.jonathanfletcher.worldstage_api.service.WebSocketViewerTracker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,20 +23,30 @@ public class StreamController {
 
     private final WebSocketViewerTracker webSocketViewerTracker;
 
-    @PostMapping("/publish")
-    public ResponseEntity<StreamResponse> publishStream(@RequestParam Map<String, String> queryParams) {
-        log.info("Establishing a new Stream connection");
-        log.info("Query Params {}", queryParams);
+    @Value("${spring.security.client.nginx.secret}")
+    private String SECRET;
 
-        return ResponseEntity.ok(streamService.publishStream(queryParams));
+    @PostMapping("/publish")
+    public ResponseEntity<StreamResponse> publishStream(@RequestParam UUID name, @RequestParam String secret) {
+        log.info("Establishing a new Stream connection");
+        if (!secret.equals(SECRET)) {
+            log.warn("Publish Stream failed nginx secret check");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return ResponseEntity.ok(streamService.publishStream(name));
     }
 
     @PostMapping("/unpublish")
-    public ResponseEntity<Void> unPublishStream(@RequestParam Map<String, String> queryParams) {
+    public ResponseEntity<Void> unPublishStream(@RequestParam UUID name, @RequestParam String secret) {
         log.info("Removing a Stream connection");
-        log.info("Query Params {}", queryParams);
 
-        streamService.unPublishStream(queryParams);
+        if (!secret.equals(SECRET)) {
+            log.warn("Cannot unpublish stream as nginx secret failed check");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        streamService.unPublishStream(name);
         return ResponseEntity.noContent().build();
     }
 

@@ -4,6 +4,8 @@ import com.jonathanfletcher.worldstage_api.property.CorsProperties;
 import com.jonathanfletcher.worldstage_api.spring.security.model.ERole;
 import com.jonathanfletcher.worldstage_api.spring.security.repository.StatelessCsrfTokenRepository;
 import com.jonathanfletcher.worldstage_api.spring.security.service.JwtAuthenticationFilter;
+import com.jonathanfletcher.worldstage_api.spring.security.service.RtmpSecretFilter;
+import com.jonathanfletcher.worldstage_api.spring.security.service.UserDetailsServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -43,7 +45,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/**", "/stream/**").permitAll()
                         .requestMatchers("/admin/**").hasRole(ERole.ADMIN.toString())
                         .anyRequest().authenticated()
                 )
@@ -94,5 +96,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }

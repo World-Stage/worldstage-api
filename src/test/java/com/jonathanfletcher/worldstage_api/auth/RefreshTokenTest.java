@@ -4,9 +4,7 @@ import com.jonathanfletcher.worldstage_api.BaseTest;
 import com.jonathanfletcher.worldstage_api.model.response.AuthResponse;
 import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
 import com.jonathanfletcher.worldstage_api.spring.security.JwtUtil;
-import com.jonathanfletcher.worldstage_api.spring.security.model.entity.RefreshToken;
 import com.jonathanfletcher.worldstage_api.spring.security.service.TokenService;
-import io.restassured.http.ContentType;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +16,6 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 public class RefreshTokenTest extends BaseTest {
 
@@ -35,9 +32,8 @@ public class RefreshTokenTest extends BaseTest {
 
     @BeforeEach
     public void setup() {
-        validFamilyId = UUID.randomUUID();
         user = createUser();
-        addAuth(user.getId());
+        validFamilyId = UUID.randomUUID();
         validRefreshToken = jwtUtil.generateRefreshToken(user.getUsername(), validFamilyId);
         tokenService.storeRefreshToken(validRefreshToken, user.getUsername(), validFamilyId);
 
@@ -72,6 +68,7 @@ public class RefreshTokenTest extends BaseTest {
 
     @Test
     void cannotGetNewAccessTokenFromInvalidRefresh() {
+        String test = "test";
         given()
             .cookie("refreshToken", "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlcyI6WyJVU0VSIl0sInN1YiI6InRlc3QiLCJpYXQiOjE3NTE2NzYwODAsImV4cCI6MTc1MTY3Njk4MH0.YlOFyMJ7IuBU9qi5t2Dra5rDFw4P-Wc3TF1NsKrMtnAIPe07tJacmRvShZiwgw69")
         .when()
