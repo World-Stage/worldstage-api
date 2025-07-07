@@ -1,5 +1,6 @@
 package com.jonathanfletcher.worldstage_api.spring.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jonathanfletcher.worldstage_api.model.entity.User;
 import com.jonathanfletcher.worldstage_api.model.request.AuthRequest;
 import com.jonathanfletcher.worldstage_api.model.request.UserCreateRequest;
@@ -44,6 +45,8 @@ public class AuthController {
 
     private final UserDetailsServiceImpl userDetailsService;
 
+    private final ObjectMapper objectMapper;
+
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody UserCreateRequest registerRequest) {
         UserResponse registeredUser = userService.registerUser(registerRequest);
@@ -68,7 +71,10 @@ public class AuthController {
         tokenService.storeRefreshToken(refreshToken, user.getUsername(), familyId);
         jwtUtil.setRefreshTokenCookie(refreshToken, response);
         log.info("User logged in: {}", user.getUsername());
-        return ResponseEntity.ok(AuthResponse.builder().accessToken(accessToken).build());
+        return ResponseEntity.ok(AuthResponse.builder()
+                .accessToken(accessToken)
+                .user(objectMapper.convertValue(user, UserResponse.class))
+                .build());
     }
 
     @PostMapping("/refresh")
@@ -95,7 +101,10 @@ public class AuthController {
                     tokenService.storeRefreshToken(newRefreshToken, user.getUsername(), familyId);
                     jwtUtil.setRefreshTokenCookie(newRefreshToken, response);
                     log.info("Refreshed access token for user: {}", user.getUsername());
-                    return ResponseEntity.ok(new AuthResponse(newAccessToken));
+                    return ResponseEntity.ok(AuthResponse.builder()
+                            .accessToken(newAccessToken)
+                            .user(objectMapper.convertValue(user, UserResponse.class))
+                    );
                 }
             }
         }

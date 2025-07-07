@@ -6,21 +6,21 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-@Configuration
-@EnableWebSocketMessageBroker
-public class WebsocketConfiguration implements WebSocketMessageBrokerConfigurer {
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOriginPatterns(
-                "http://localhost:80",
-                "http://localhost",
-                "http://localhost:3000"
-        ).withSockJS();
-    }
-
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/app");
-        registry.enableSimpleBroker("/encore", "/chat");
-    }
-}
+//@Configuration
+//@EnableWebSocketMessageBroker
+//public class WebsocketConfiguration implements WebSocketMessageBrokerConfigurer {
+//    @Override
+//    public void registerStompEndpoints(StompEndpointRegistry registry) {
+//        registry.addEndpoint("/ws").setAllowedOriginPatterns(
+//                "http://localhost:80",
+//                "http://localhost",
+//                "http://localhost:3000"
+//        ).withSockJS();
+//    }
+//
+//    @Override
+//    public void configureMessageBroker(MessageBrokerRegistry registry) {
+//        registry.setApplicationDestinationPrefixes("/app");
+//        registry.enableSimpleBroker("/encore", "/chat");
+//    }
+//}

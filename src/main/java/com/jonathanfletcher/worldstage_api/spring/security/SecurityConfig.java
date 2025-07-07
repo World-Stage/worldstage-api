@@ -3,6 +3,8 @@ package com.jonathanfletcher.worldstage_api.spring.security;
 import com.jonathanfletcher.worldstage_api.property.CorsProperties;
 import com.jonathanfletcher.worldstage_api.spring.security.model.ERole;
 import com.jonathanfletcher.worldstage_api.spring.security.service.JwtAuthenticationFilter;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +23,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -41,7 +44,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/stream/**").permitAll()
+                        .requestMatchers("/auth/**", "/stream/**", "/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasRole(ERole.ADMIN.toString())
                         .anyRequest().authenticated()
                 )
@@ -53,15 +56,25 @@ public class SecurityConfig {
                 .cors(cors -> {
                     cors.configurationSource(corsConfigurationSource());
                 })
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .headers(headers -> headers
-                        .contentSecurityPolicy(csp ->
-                                csp.policyDirectives("default-src 'self'; script-src 'self'; object-src 'none'")
-                        )
-                )
+//                .headers(headers -> headers
+//                        .contentSecurityPolicy(csp ->
+//                                csp.policyDirectives("default-src 'self'; script-src 'self'; object-src 'none'")
+//                        )
+//                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                // Explicitly bypass JWT filter for WebSocket endpoints
+                .addFilterBefore(new Filter() {
+                    @Override
+                    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+                            throws IOException, ServletException {
+                        HttpServletRequest httpRequest = (HttpServletRequest) request;
+                        if (httpRequest.getRequestURI().startsWith("/ws")) {
+                            chain.doFilter(request, response); // Bypass JWT filter
+                            return;
+                        }
+                        jwtFilter.doFilter(request, response, chain);
+                    }
+                }, JwtAuthenticationFilter.class)
                 .httpBasic(AbstractHttpConfigurer::disable);
         return http.build();
     }
@@ -72,7 +85,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of("http://localhost", "http://localhost:80", "http://localhost:3000"));
         configuration.setAllowCredentials(true);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With", "X-CSRF-TOKEN"));
+        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With"));
 //        configuration.setExposedHeaders(List.of("Content-Type", "Access-Control-Allow-Origin"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

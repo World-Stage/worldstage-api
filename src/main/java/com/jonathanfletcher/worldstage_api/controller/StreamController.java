@@ -27,24 +27,24 @@ public class StreamController {
     private String SECRET;
 
     @PostMapping("/publish")
-    public ResponseEntity<StreamResponse> publishStream(@RequestParam UUID name, @RequestParam String secret) {
+    public ResponseEntity<StreamResponse> publishStream(@RequestParam UUID name, @RequestParam(required = false) String secret) {
         log.info("Establishing a new Stream connection");
-        if (!secret.equals(SECRET)) {
-            log.warn("Publish Stream failed nginx secret check");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+//        if (!secret.equals(SECRET)) {
+//            log.warn("Publish Stream failed nginx secret check");
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+//        }
 
         return ResponseEntity.ok(streamService.publishStream(name));
     }
 
     @PostMapping("/unpublish")
-    public ResponseEntity<Void> unPublishStream(@RequestParam UUID name, @RequestParam String secret) {
+    public ResponseEntity<Void> unPublishStream(@RequestParam UUID name, @RequestParam(required = false) String secret) {
         log.info("Removing a Stream connection");
 
-        if (!secret.equals(SECRET)) {
-            log.warn("Cannot unpublish stream as nginx secret failed check");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+//        if (!secret.equals(SECRET)) {
+//            log.warn("Cannot unpublish stream as nginx secret failed check");
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+//        }
 
         streamService.unPublishStream(name);
         return ResponseEntity.noContent().build();
