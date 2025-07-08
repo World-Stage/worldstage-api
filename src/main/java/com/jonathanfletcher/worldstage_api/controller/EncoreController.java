@@ -31,23 +31,19 @@ public class EncoreController {
 
     @MessageMapping("/encore")
     @SendTo("/encore")
-    @PreAuthorize("isAuthenticated()")
-    public EncoreMetrics handleEncore(Principal principal) {
-        String username = principal.getName(); // the authenticated username
-        // TODO Figure out a way to not load user everytime
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Could not find user"));
-
-        log.info("User {} is requesting an encore", username);
+    public EncoreMetrics handleEncore(EncoreRequest request) {
+        //TODO Figure out how to use principal instead
+        log.info("User {} is requesting an encore", request.getUserId());
 
         if (streamQueueService.getCurrentStream() == null) {
-            log.info("User {} wants an encore for no active stream!", username);
+            log.info("User {} wants an encore for no active stream!", request.getUserId());
             throw new NoSuchElementException("There is currently no active stream");
         }
 
-        EncoreMetrics metrics = encoreService.castVote(UUID.fromString(username));
+        EncoreMetrics metrics = encoreService.castVote(request.getUserId());
 
         if (metrics.getEncoreProgressPercent() >= 100) {
-            log.info("Encore progression reached. Extending current stream");
+            log.info("Encore progression reach. Extending current stream");
             streamQueueService.extendCurrentStream();
         }
 
