@@ -4,6 +4,7 @@ import com.jonathanfletcher.worldstage_api.model.ChatMessage;
 import com.jonathanfletcher.worldstage_api.model.MessageType;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.time.Instant;
@@ -14,6 +15,7 @@ public class ChatController {
 
     @MessageMapping("/send") // from frontend /app/send
     @SendTo("/chat/messages")
+    @PreAuthorize("isAuthenticated()")
     public ChatMessage handleMessage(ChatMessage message, Principal principal) {
         if (principal == null) {
             throw new SecurityException("User must be authenticated to send messages.");

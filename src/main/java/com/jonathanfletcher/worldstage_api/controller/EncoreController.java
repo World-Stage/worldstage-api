@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -30,6 +31,7 @@ public class EncoreController {
 
     @MessageMapping("/encore")
     @SendTo("/encore")
+    @PreAuthorize("isAuthenticated()")
     public EncoreMetrics handleEncore(Principal principal) {
         String username = principal.getName(); // the authenticated username
         // TODO Figure out a way to not load user everytime
