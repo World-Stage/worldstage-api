@@ -69,19 +69,19 @@ public class SecurityConfig {
 //                        )
 //                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                // Explicitly bypass JWT filter for WebSocket endpoints
-                .addFilterBefore(new Filter() {
-                    @Override
-                    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-                            throws IOException, ServletException {
-                        HttpServletRequest httpRequest = (HttpServletRequest) request;
-                        if (httpRequest.getRequestURI().startsWith("/ws")) {
-                            chain.doFilter(request, response); // Bypass JWT filter
-                            return;
-                        }
-                        jwtFilter.doFilter(request, response, chain);
-                    }
-                }, JwtAuthenticationFilter.class)
+                // Explicitly bypass JWT filter for WebSocket endpoints (May be needed for websocket auth)
+//                .addFilterBefore(new Filter() {
+//                    @Override
+//                    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+//                            throws IOException, ServletException {
+//                        HttpServletRequest httpRequest = (HttpServletRequest) request;
+//                        if (httpRequest.getRequestURI().startsWith("/ws")) {
+//                            chain.doFilter(request, response); // Bypass JWT filter
+//                            return;
+//                        }
+//                        jwtFilter.doFilter(request, response, chain);
+//                    }
+//                }, JwtAuthenticationFilter.class)
                 .httpBasic(AbstractHttpConfigurer::disable);
         return http.build();
     }

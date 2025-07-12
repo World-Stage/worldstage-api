@@ -22,7 +22,9 @@ CREATE TABLE edge.users (
     id UUID PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(120) NOT NULL
+    password VARCHAR(120) NOT NULL,
+    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_modified_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create join table for users and roles

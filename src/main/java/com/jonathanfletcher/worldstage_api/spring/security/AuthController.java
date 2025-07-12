@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
@@ -135,11 +136,22 @@ public class AuthController {
         return ResponseEntity.ok("Logged out successfully");
     }
 
-    @GetMapping("/csrf")
-    public ResponseEntity<?> getCsrfToken(CsrfToken csrfToken) {
-        log.info("CSRF token requested");
-        return ResponseEntity.ok()
-                .header("X-CSRF-TOKEN", csrfToken.getToken())
-                .build();
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getUserFromPrincipal(@AuthenticationPrincipal User userDetails) {
+        return ResponseEntity.ok(UserResponse.builder()
+                        .id(userDetails.getId())
+                        .email(userDetails.getEmail())
+                        .username(userDetails.getUsername())
+                        .createdTs(userDetails.getCreatedTs())
+                        .lastModifiedTs(userDetails.getLastModifiedTs())
+                .build());
     }
+
+//    @GetMapping("/csrf")
+//    public ResponseEntity<?> getCsrfToken(CsrfToken csrfToken) {
+//        log.info("CSRF token requested");
+//        return ResponseEntity.ok()
+//                .header("X-CSRF-TOKEN", csrfToken.getToken())
+//                .build();
+//    }
 }
