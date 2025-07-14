@@ -20,6 +20,19 @@ spring:
     defaultSchema: edge
     locations: classpath:db/migration
     baseline-on-migrate: true
+  security:
+    jwt:
+      access-secret: o5j(1m]h%'Dl3D&8£f"ah6f]t&3VtE]uej-#?65."K78"UUeEa
+      refresh-secret: k[k66T8Bf'X~q+KQ27OB£3zay(9Q+4F(ydA>J'nM:DK[*XSc8B
+    client:
+      nginx:
+        secret: E3mJz0o0[3]k£oJ{vdWx{(22UI8r_i'A!-inys"q,y9Y;L?K~
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
 
 management:
   endpoints:

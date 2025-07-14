@@ -58,6 +58,7 @@ public class StreamTest extends BaseTest {
         UUID streamKey = UUID.randomUUID();
         given()
             .queryParam("name", streamKey)
+            .queryParam("secret", nginxSecret)
         .when()
             .post("/stream/publish")
         .then()
@@ -84,6 +85,7 @@ public class StreamTest extends BaseTest {
 
         given()
             .queryParam("name", activeStream.getStreamKey())
+            .queryParam("secret", nginxSecret)
         .when()
             .post("/stream/unpublish")
         .then()

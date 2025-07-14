@@ -24,9 +24,8 @@ public class StreamService {
 
     private final ObjectMapper objectMapper;
 
-    public StreamResponse publishStream(Map<String, String> queryParams) {
+    public StreamResponse publishStream(UUID streamKey) {
         //TODO: Verify streamkey is correct
-        UUID streamKey = UUID.fromString(queryParams.get("name"));
         log.info("Stream published: {}", streamKey);
         String rtmpUrl = "rtmp://nginx-rtmp:1935/live/" + streamKey;
         String hlsUrl = "http://nginx-rtmp:8080/hls/" + streamKey + ".m3u8";
@@ -43,8 +42,7 @@ public class StreamService {
         return objectMapper.convertValue(_stream, StreamResponse.class);
     }
 
-    public void unPublishStream(Map<String, String> queryParams) {
-        UUID streamKey = UUID.fromString(queryParams.get("name"));
+    public void unPublishStream(UUID streamKey) {
         if (streamKey == null) {
             log.error("No valid stream key provided");
             throw new RuntimeException("No valid stream key");

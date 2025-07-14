@@ -13,6 +13,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -57,6 +58,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleNoSuchElementException(NoSuchElementException exception, ServletWebRequest webRequest) {
 
         return buildErrorResponse(exception, HttpStatus.BAD_REQUEST, webRequest);
+    }
+
+    @ExceptionHandler({EntityConflictException.class, HttpClientErrorException.Conflict.class})
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseEntity<Object> handleConflictEntityException(Exception exception, ServletWebRequest webRequest) {
+        return buildErrorResponse(exception, HttpStatus.CONFLICT, webRequest);
     }
 
     private ResponseEntity<Object> buildErrorResponse(Exception exception, HttpStatusCode httpStatus, ServletWebRequest webRequest) {
