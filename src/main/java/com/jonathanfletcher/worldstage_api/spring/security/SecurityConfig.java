@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/stream/**", "/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasRole(ERole.ADMIN.toString())
+                        .requestMatchers("/mock/**").permitAll()
                         .anyRequest().authenticated()
                 )
 //                .csrf(csrf -> csrf

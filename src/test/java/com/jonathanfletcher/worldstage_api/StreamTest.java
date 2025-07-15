@@ -2,13 +2,16 @@ package com.jonathanfletcher.worldstage_api;
 
 import com.jonathanfletcher.worldstage_api.model.StreamStatus;
 import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
+import com.jonathanfletcher.worldstage_api.proxy.mock.MockTranscoderController;
 import com.jonathanfletcher.worldstage_api.repository.StreamRepository;
 import com.jonathanfletcher.worldstage_api.service.StreamQueueService;
 import lombok.SneakyThrows;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +30,9 @@ public class StreamTest extends BaseTest {
 
     @Autowired
     private StreamQueueService streamQueueService;
+
+    @MockitoSpyBean
+    MockTranscoderController mockTranscoderController;
 
     @BeforeEach
     void resetState() {
@@ -67,6 +73,8 @@ public class StreamTest extends BaseTest {
             .body("streamKey", equalTo(streamKey.toString()))
             .body("rtmpUrl", notNullValue())
             .body("hlsUrl", notNullValue());
+
+        Mockito.verify(mockTranscoderController).startTranscoding(streamKey);
     }
 
     @Test
@@ -95,6 +103,8 @@ public class StreamTest extends BaseTest {
             .get("/stream/view/active")
         .then()
             .statusCode(HttpStatus.SC_NOT_FOUND);
+
+        Mockito.verify(mockTranscoderController).stopTranscoding(activeStream.getStreamKey());
     }
 
     @Test

@@ -8,3 +8,7 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
+
+proxy:
+  transcoder:
+    base-url: http://localhost:8081/mock/transcoder

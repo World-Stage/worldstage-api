@@ -105,6 +105,7 @@ public class AuthController {
                     return ResponseEntity.ok(AuthResponse.builder()
                             .accessToken(newAccessToken)
                             .user(objectMapper.convertValue(user, UserResponse.class))
+                            .build()
                     );
                 }
             }
