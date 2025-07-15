@@ -55,7 +55,7 @@ public class TranscoderProxy {
                     null,
                     new ParameterizedTypeReference<Void>() {});
         } catch (HttpStatusCodeException e) {
-            log.warn("Exception occurred when transcoding stream {}", streamKey);
+            log.warn("Exception occurred when stopping transcoding stream {}", streamKey);
             throw e;
         }
     }

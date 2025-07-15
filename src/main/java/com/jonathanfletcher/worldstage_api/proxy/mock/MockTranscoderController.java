@@ -24,7 +24,7 @@ public class MockTranscoderController {
 
     @DeleteMapping(path = "/transcode/{streamKey}")
     public ResponseEntity<Void> stopTranscoding(@PathVariable UUID streamKey) {
-        log.info("Received mock request to start transcoding stream {}", streamKey);
+        log.info("Received mock request to stop transcoding stream {}", streamKey);
 
         return ResponseEntity.noContent().build();
     }
