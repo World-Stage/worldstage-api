@@ -22,18 +22,37 @@ public class TranscoderProxy {
 
     private final TranscoderProxyProperties properties;
 
-    public void encodeStream(UUID streamKey) {
+    public void transcodeStream(UUID streamKey) {
         URI uri = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
                 .pathSegment("transcode")
                 .pathSegment(streamKey.toString())
                 .build().toUri();
 
-        log.info("Sending request to start encoding for stream {}", streamKey);
+        log.info("Sending request to start transcoding for stream {}", streamKey);
 
         try {
             restTemplate.exchange(uri,
                     HttpMethod.POST,
                    null,
+                    new ParameterizedTypeReference<Void>() {});
+        } catch (HttpStatusCodeException e) {
+            log.warn("Exception occurred when transcoding stream {}", streamKey);
+            throw e;
+        }
+    }
+
+    public void stopTranscode(UUID streamKey) {
+        URI uri = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
+                .pathSegment("transcode")
+                .pathSegment(streamKey.toString())
+                .build().toUri();
+
+        log.info("Sending request to stop transcoding for stream {}", streamKey);
+
+        try {
+            restTemplate.exchange(uri,
+                    HttpMethod.DELETE,
+                    null,
                     new ParameterizedTypeReference<Void>() {});
         } catch (HttpStatusCodeException e) {
             log.warn("Exception occurred when transcoding stream {}", streamKey);

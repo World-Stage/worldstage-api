@@ -40,7 +40,7 @@ public class StreamService {
                 .status(StreamStatus.QUEUED)
                 .build();
 
-        transcoderProxy.encodeStream(streamKey);
+        transcoderProxy.transcodeStream(streamKey);
         Stream _stream = streamRepository.save(stream);
         streamQueueService.addStreamToQueue(_stream);
         return objectMapper.convertValue(_stream, StreamResponse.class);
@@ -59,6 +59,7 @@ public class StreamService {
                     streamRepository.save(stream);
                     log.info("Stream {} marked as ended", stream.getId());
                     streamQueueService.removeStreamFromQueue(stream);
+                    transcoderProxy.stopTranscode(streamKey);
                 });
     }
 

@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.UUID;
@@ -75,7 +74,7 @@ public class StreamTest extends BaseTest {
             .body("rtmpUrl", notNullValue())
             .body("hlsUrl", notNullValue());
 
-        Mockito.verify(mockTranscoderController).createEvent(streamKey);
+        Mockito.verify(mockTranscoderController).startTranscoding(streamKey);
     }
 
     @Test
@@ -104,6 +103,8 @@ public class StreamTest extends BaseTest {
             .get("/stream/view/active")
         .then()
             .statusCode(HttpStatus.SC_NOT_FOUND);
+
+        Mockito.verify(mockTranscoderController).stopTranscoding(activeStream.getStreamKey());
     }
 
     @Test

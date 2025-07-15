@@ -16,9 +16,16 @@ import java.util.UUID;
 public class MockTranscoderController {
 
     @PostMapping(path = "/transcode/{streamKey}")
-    public ResponseEntity<Void> createEvent(@PathVariable UUID streamKey) {
+    public ResponseEntity<Void> startTranscoding(@PathVariable UUID streamKey) {
         log.info("Received mock request to start transcoding stream {}", streamKey);
 
         return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping(path = "/transcode/{streamKey}")
+    public ResponseEntity<Void> stopTranscoding(@PathVariable UUID streamKey) {
+        log.info("Received mock request to start transcoding stream {}", streamKey);
+
+        return ResponseEntity.noContent().build();
     }
 }
