@@ -5,12 +5,12 @@ import com.jonathanfletcher.worldstage_api.exception.EntityNotFoundException;
 import com.jonathanfletcher.worldstage_api.model.StreamStatus;
 import com.jonathanfletcher.worldstage_api.model.entity.Stream;
 import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
+import com.jonathanfletcher.worldstage_api.proxy.TranscoderProxy;
 import com.jonathanfletcher.worldstage_api.repository.StreamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -22,13 +22,15 @@ public class StreamService {
 
     private final StreamQueueService streamQueueService;
 
+    private final TranscoderProxy transcoderProxy;
+
     private final ObjectMapper objectMapper;
 
     public StreamResponse publishStream(UUID streamKey) {
         //TODO: Verify streamkey is correct
         log.info("Stream published: {}", streamKey);
         String rtmpUrl = "rtmp://nginx-rtmp:1935/live/" + streamKey;
-        String hlsUrl = "http://nginx-rtmp:8080/hls/" + streamKey + ".m3u8";
+        String hlsUrl = "http://nginx-rtmp:8080/hls/" + streamKey + "/index.m3u8";
         Stream stream = Stream.builder()
                 .id(UUID.randomUUID())
                 .streamKey(streamKey)
@@ -37,6 +39,8 @@ public class StreamService {
                 .active(false)
                 .status(StreamStatus.QUEUED)
                 .build();
+
+        transcoderProxy.encodeStream(streamKey);
         Stream _stream = streamRepository.save(stream);
         streamQueueService.addStreamToQueue(_stream);
         return objectMapper.convertValue(_stream, StreamResponse.class);

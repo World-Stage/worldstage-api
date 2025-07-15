@@ -9,6 +9,10 @@ spring:
     hibernate:
       ddl-auto: validate
 
+proxy:
+  transcoder:
+    base-url: http://transcoder-worker:3001
+
 cors:
   allowed-headers:
     - Origin

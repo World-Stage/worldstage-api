@@ -7,11 +7,11 @@ import com.jonathanfletcher.worldstage_api.model.request.UserCreateRequest;
 import com.jonathanfletcher.worldstage_api.model.response.AuthResponse;
 import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
 import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
+import com.jonathanfletcher.worldstage_api.proxy.property.TranscoderProxyProperties;
 import com.jonathanfletcher.worldstage_api.repository.UserRepository;
 import com.jonathanfletcher.worldstage_api.spring.security.JwtUtil;
 import com.jonathanfletcher.worldstage_api.spring.security.repository.RefreshTokenRepository;
 import io.restassured.RestAssured;
-import io.restassured.config.ObjectMapperConfig;
 import io.restassured.filter.Filter;
 import io.restassured.http.ContentType;
 import org.apache.http.HttpStatus;
@@ -54,6 +54,9 @@ public abstract class BaseTest {
     @Autowired
     JwtUtil jwtUtils;
 
+    @Autowired
+    TranscoderProxyProperties transcoderProxyProperties;
+
     @Value("${spring.security.client.nginx.secret}")
     protected String nginxSecret;
 
@@ -62,12 +65,18 @@ public abstract class BaseTest {
         RestAssured.port = serverPort;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         RestAssured.replaceFiltersWith(Collections.emptyList());
+        configureBaseUrls();
     }
 
     @AfterEach
     public void strip() {
         userRepository.deleteAll();;
         refreshTokenRepository.deleteAll();
+    }
+
+    protected void configureBaseUrls() {
+        // These need to end with /mock so they don't conflict with the actual controller mappings
+        this.transcoderProxyProperties.setBaseUrl(String.format("http://localhost:%d/mock/transcoder", serverPort));
     }
 
     protected void addAuth(UUID userId) {
