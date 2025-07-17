@@ -4,6 +4,7 @@ import com.jonathanfletcher.worldstage_api.BaseTest;
 import com.jonathanfletcher.worldstage_api.model.entity.User;
 import com.jonathanfletcher.worldstage_api.model.request.AuthRequest;
 import com.jonathanfletcher.worldstage_api.model.request.UserCreateRequest;
+import com.jonathanfletcher.worldstage_api.model.response.AuthResponse;
 import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
 import com.jonathanfletcher.worldstage_api.repository.UserRepository;
 import io.restassured.http.ContentType;
@@ -33,20 +34,20 @@ public class RegistrationTest extends BaseTest {
                 .password("test123")
                 .build();
 
-        UserResponse user = given()
+        AuthResponse response = given()
                 .contentType(ContentType.JSON)
                 .body(request)
             .when()
                 .post("/auth/register")
             .then()
                 .statusCode(HttpStatus.SC_OK)
-                .body("id", notNullValue())
-                .body("email", equalTo(request.getEmail()))
-                .body("username", equalTo(request.getUsername()))
+                .body("user.id", notNullValue())
+                .body("user.email", equalTo(request.getEmail()))
+                .body("user.username", equalTo(request.getUsername()))
             .extract()
-            .as(UserResponse.class);
+            .as(AuthResponse.class);
 
-        Optional<User> createdUser = userRepository.findById(user.getId());
+        Optional<User> createdUser = userRepository.findById(response.getUser().getId());
         Assert.isTrue(createdUser.isPresent(), "User not found");
     }
 

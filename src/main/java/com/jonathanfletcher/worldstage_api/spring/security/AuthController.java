@@ -49,11 +49,13 @@ public class AuthController {
     private final ObjectMapper objectMapper;
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserCreateRequest registerRequest) {
-        UserResponse registeredUser = userService.registerUser(registerRequest);
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody UserCreateRequest registerRequest, HttpServletResponse response) {
+        User registeredUser = userService.registerUser(registerRequest);
 
         log.info("User registered: {}", registerRequest.getUsername());
-        return ResponseEntity.ok(registeredUser);
+        AuthResponse responseBody = authenticateUser(registeredUser, response);
+
+        return ResponseEntity.ok(responseBody);
     }
 
     @PostMapping("/login")
@@ -66,16 +68,8 @@ public class AuthController {
 
 
         User user = (User) userDetailsService.loadUserByUsername(userAuth);
-        String accessToken = jwtUtil.generateAccessToken(user);
-        UUID familyId = UUID.randomUUID();
-        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), familyId);
-        tokenService.storeRefreshToken(refreshToken, user.getUsername(), familyId);
-        jwtUtil.setRefreshTokenCookie(refreshToken, response);
-        log.info("User logged in: {}", user.getUsername());
-        return ResponseEntity.ok(AuthResponse.builder()
-                .accessToken(accessToken)
-                .user(objectMapper.convertValue(user, UserResponse.class))
-                .build());
+        AuthResponse responseBody = authenticateUser(user, response);
+        return ResponseEntity.ok(responseBody);
     }
 
     @PostMapping("/refresh")
@@ -146,6 +140,19 @@ public class AuthController {
                         .createdTs(userDetails.getCreatedTs())
                         .lastModifiedTs(userDetails.getLastModifiedTs())
                 .build());
+    }
+
+    private AuthResponse authenticateUser(User user, HttpServletResponse response) {
+        String accessToken = jwtUtil.generateAccessToken(user);
+        UUID familyId = UUID.randomUUID();
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), familyId);
+        tokenService.storeRefreshToken(refreshToken, user.getUsername(), familyId);
+        jwtUtil.setRefreshTokenCookie(refreshToken, response);
+        log.info("User logged in: {}", user.getUsername());
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .user(objectMapper.convertValue(user, UserResponse.class))
+                .build();
     }
 
 //    @GetMapping("/csrf")

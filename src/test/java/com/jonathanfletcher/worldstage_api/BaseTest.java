@@ -125,7 +125,7 @@ public abstract class BaseTest {
                 .as(StreamResponse.class);
     }
 
-    protected UserResponse createUser() {
+    protected AuthResponse createUser() {
         UserCreateRequest request = UserCreateRequest.builder()
                 .username("test")
                 .email("test@test.com")
@@ -139,11 +139,11 @@ public abstract class BaseTest {
                 .post("/auth/register")
             .then()
                 .statusCode(HttpStatus.SC_OK)
-                .body("id", notNullValue())
-                .body("email", equalTo(request.getEmail()))
-                .body("username", equalTo(request.getUsername()))
+                .body("user.id", notNullValue())
+                .body("user.email", equalTo(request.getEmail()))
+                .body("user.username", equalTo(request.getUsername()))
                 .extract()
-                .as(UserResponse.class);
+                .as(AuthResponse.class);
     }
 
     protected AuthResponse loginUser(String username) {

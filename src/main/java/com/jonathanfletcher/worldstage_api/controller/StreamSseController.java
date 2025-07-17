@@ -10,6 +10,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
@@ -41,6 +42,13 @@ public class StreamSseController {
         log.info("Sending SSE for updated stream expiration {}", expiration.getEpochSecond());
         emitMessage("stream-expiration", expiration.getEpochSecond());
     }
+
+    public void notifyNoActiveStream() {
+        log.info("Sending SSE for no active stream");
+        emitMessage("stream-ended", Map.of(
+                "timestamp", Instant.now().getEpochSecond(),
+                "message", "No active stream available"
+        ));    }
 
     private <T> void emitMessage(String name, T data) {
         List<SseEmitter> deadEmitters = new java.util.ArrayList<>();
