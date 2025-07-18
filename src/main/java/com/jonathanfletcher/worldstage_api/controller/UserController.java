@@ -27,12 +27,12 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping
-    public ResponseEntity<UserResponse> createUser(@RequestBody @Valid UserCreateRequest request) {
-        log.info("A new user is trying to sign up with email: {}", request.getEmail());
-
-        return ResponseEntity.ok(userService.registerUser(request));
-    }
+//    @PostMapping
+//    public ResponseEntity<UserResponse> createUser(@RequestBody @Valid UserCreateRequest request) {
+//        log.info("A new user is trying to sign up with email: {}", request.getEmail());
+//
+//        return ResponseEntity.ok(userService.registerUser(request));
+//    }
 
     @GetMapping(path = "/{userId}")
     public ResponseEntity<UserResponse> getUser(@PathVariable UUID userId) {

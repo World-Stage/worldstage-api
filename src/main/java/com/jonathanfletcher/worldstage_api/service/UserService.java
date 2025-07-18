@@ -30,7 +30,7 @@ public class UserService {
 
     private final ObjectMapper objectMapper;
 
-    public UserResponse registerUser(UserCreateRequest request) {
+    public User registerUser(UserCreateRequest request) {
         if (userRepository.existsByUsername(request.getUsername().toLowerCase())) {
             throw new EntityConflictException(String.format("Username %s is already taken!", request.getUsername()));
         }
@@ -52,9 +52,7 @@ public class UserService {
                     })))
                     .build();
 
-            User _user = userRepository.save(newUser);
-
-            return objectMapper.convertValue(_user, UserResponse.class);
+            return userRepository.save(newUser);
     }
 
     public UserResponse getUser(UUID userId) {

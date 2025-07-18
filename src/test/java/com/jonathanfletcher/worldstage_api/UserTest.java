@@ -1,5 +1,6 @@
 package com.jonathanfletcher.worldstage_api;
 
+import com.jonathanfletcher.worldstage_api.model.response.AuthResponse;
 import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,7 @@ public class UserTest extends BaseTest{
 
     @Test
     void canGetUser() {
-        UserResponse user = createUser();
+        UserResponse user = createUser().getUser();
         addAuth(user.getId());
 
         given()
@@ -28,7 +29,8 @@ public class UserTest extends BaseTest{
 
     @Test
     void canGetUserFromAuth() {
-        UserResponse user = createUser();
+        AuthResponse response = createUser();
+        UserResponse user = response.getUser();
         addAuth(user.getId());
 
         when()

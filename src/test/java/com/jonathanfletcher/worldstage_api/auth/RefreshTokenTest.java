@@ -33,7 +33,7 @@ public class RefreshTokenTest extends BaseTest {
 
     @BeforeEach
     public void setup() {
-        user = createUser();
+        user = createUser().getUser();
 
         validFamilyId = UUID.randomUUID();
         validRefreshToken = jwtUtil.generateRefreshToken(user.getUsername(), validFamilyId);

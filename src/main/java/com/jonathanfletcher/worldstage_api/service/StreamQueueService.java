@@ -77,6 +77,7 @@ public class StreamQueueService {
                     timerTask.cancel(true);
                 }
                 currentStream = null;
+                streamSseController.notifyNoActiveStream();
             }
             log.info("Successfully removed stream {} from queue", stream.getId());
         } catch (Exception e) {
