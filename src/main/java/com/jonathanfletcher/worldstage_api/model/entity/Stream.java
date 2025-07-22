@@ -27,7 +27,11 @@ public class Stream {
 
     private String rtmpUrl;
 
+    @NonNull
     private String hlsUrl;
+
+    @NonNull
+    private UUID userId;
 
     private Boolean active;
 

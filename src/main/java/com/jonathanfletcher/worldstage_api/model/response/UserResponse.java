@@ -24,7 +24,11 @@ public class UserResponse {
 
     private String username;
 
+    private UUID streamKey;
+
     private Instant createdTs;
 
     private Instant lastModifiedTs;
+
+    private StreamResponse activeStream;
 }

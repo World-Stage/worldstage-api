@@ -13,4 +13,6 @@ public interface StreamRepository extends JpaRepository<Stream, UUID> {
     Optional<Stream> findByActiveTrue();
 
     Optional<Stream> findByStreamKeyAndStatusNot(UUID streamKey, StreamStatus status);
+
+    Optional<Stream> findByStreamKeyAndActiveTrue(UUID streamKey);
 }

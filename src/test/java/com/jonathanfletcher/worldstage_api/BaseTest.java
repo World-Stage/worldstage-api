@@ -6,7 +6,6 @@ import com.jonathanfletcher.worldstage_api.model.request.AuthRequest;
 import com.jonathanfletcher.worldstage_api.model.request.UserCreateRequest;
 import com.jonathanfletcher.worldstage_api.model.response.AuthResponse;
 import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
-import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
 import com.jonathanfletcher.worldstage_api.proxy.property.TranscoderProxyProperties;
 import com.jonathanfletcher.worldstage_api.repository.UserRepository;
 import com.jonathanfletcher.worldstage_api.spring.security.JwtUtil;
@@ -131,7 +130,10 @@ public abstract class BaseTest {
                 .email("test@test.com")
                 .password("test123")
                 .build();
+        return createUser(request);
+    }
 
+    protected AuthResponse createUser(UserCreateRequest request) {
         return given()
                 .contentType(ContentType.JSON)
                 .body(request)
@@ -142,6 +144,7 @@ public abstract class BaseTest {
                 .body("user.id", notNullValue())
                 .body("user.email", equalTo(request.getEmail()))
                 .body("user.username", equalTo(request.getUsername()))
+                .body("user.streamKey", notNullValue())
                 .extract()
                 .as(AuthResponse.class);
     }

@@ -5,7 +5,9 @@ import com.jonathanfletcher.worldstage_api.exception.EntityConflictException;
 import com.jonathanfletcher.worldstage_api.exception.EntityNotFoundException;
 import com.jonathanfletcher.worldstage_api.model.entity.User;
 import com.jonathanfletcher.worldstage_api.model.request.UserCreateRequest;
+import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
 import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
+import com.jonathanfletcher.worldstage_api.repository.StreamRepository;
 import com.jonathanfletcher.worldstage_api.repository.UserRepository;
 import com.jonathanfletcher.worldstage_api.spring.security.model.ERole;
 import com.jonathanfletcher.worldstage_api.spring.security.model.entity.Role;
@@ -28,6 +30,8 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final StreamRepository streamRepository;
+
     private final ObjectMapper objectMapper;
 
     public User registerUser(UserCreateRequest request) {
@@ -43,6 +47,7 @@ public class UserService {
                     .username(request.getUsername().toLowerCase())
                     .email(request.getEmail().toLowerCase())
                     .password(passwordEncoder.encode(request.getPassword()))
+                    .streamKey(UUID.randomUUID())
                     .roles(Set.of(roleRepository.findByName(ERole.USER).orElseGet(() -> {
                         log.info("Creating new role: {}", ERole.USER);
                         return roleRepository.save(Role.builder()
@@ -55,9 +60,13 @@ public class UserService {
             return userRepository.save(newUser);
     }
 
-    public UserResponse getUser(UUID userId) {
+    public UserResponse getUser(UUID userId, Boolean getActiveStream) {
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        return objectMapper.convertValue(user, UserResponse.class);
+        UserResponse response = objectMapper.convertValue(user, UserResponse.class);
+        if (getActiveStream) {
+            streamRepository.findByStreamKeyAndActiveTrue(user.getStreamKey())
+                    .ifPresent(stream -> response.setActiveStream(objectMapper.convertValue(stream, StreamResponse.class)));
+        }
+        return response;
     }
 }

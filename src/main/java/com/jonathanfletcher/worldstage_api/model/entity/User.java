@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.jonathanfletcher.worldstage_api.spring.security.model.entity.RefreshToken;
 import com.jonathanfletcher.worldstage_api.spring.security.model.entity.Role;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import jakarta.validation.constraints.NotBlank;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "users", schema = "edge",
         uniqueConstraints = {@UniqueConstraint(columnNames = "username"),
-                @UniqueConstraint(columnNames = "email")})
+                @UniqueConstraint(columnNames = "email"), @UniqueConstraint(columnNames = "streamKey")})
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -63,6 +64,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<RefreshToken> refreshTokens = new ArrayList<>();
+
+    @NotNull
+    private UUID streamKey;
 
     @CreationTimestamp
     private Instant createdTs;

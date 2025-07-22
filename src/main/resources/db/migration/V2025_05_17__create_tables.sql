@@ -4,12 +4,16 @@ CREATE TABLE IF NOT EXISTS streams (
   id UUID PRIMARY KEY,
   stream_key UUID NOT NULL,
   rtmp_url VARCHAR,
-  hls_url VARCHAR,
+  hls_url VARCHAR NOT NULL,
+  user_id UUID NOT NULL,
   active BOOLEAN DEFAULT false,
   status VARCHAR,
   created_ts TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_modified_ts TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Create index for streams
+Create INDEX idx_stream_stream_key ON streams(stream_key);
 
 -- Create roles table
 CREATE TABLE edge.roles (
@@ -23,9 +27,12 @@ CREATE TABLE edge.users (
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(120) NOT NULL,
+    stream_key UUID NOT NULL UNIQUE,
     created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_modified_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+-- Create index for users
+Create INDEX idx_user_stream_key ON users(stream_key);
 
 -- Create join table for users and roles
 CREATE TABLE edge.users_roles (
