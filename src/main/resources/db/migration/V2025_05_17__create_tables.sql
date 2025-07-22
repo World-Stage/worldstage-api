@@ -19,7 +19,9 @@ Create INDEX idx_stream_stream_key ON streams(stream_key);
 CREATE TABLE IF NOT EXISTS streams_metadata (
     user_id PRIMARY KEY,
     title VARCHAR NOT NULL,
-    description VARCHAR
+    description VARCHAR,
+    created_ts TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_modified_ts TIMESTAMPTZ NOT NULL DEFAULT now()
 )
 
 -- Create roles table

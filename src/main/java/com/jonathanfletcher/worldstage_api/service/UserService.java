@@ -5,6 +5,7 @@ import com.jonathanfletcher.worldstage_api.exception.EntityConflictException;
 import com.jonathanfletcher.worldstage_api.exception.EntityNotFoundException;
 import com.jonathanfletcher.worldstage_api.model.entity.StreamMetadata;
 import com.jonathanfletcher.worldstage_api.model.entity.User;
+import com.jonathanfletcher.worldstage_api.model.request.StreamMetadataRequest;
 import com.jonathanfletcher.worldstage_api.model.request.UserCreateRequest;
 import com.jonathanfletcher.worldstage_api.model.response.StreamMetadataResponse;
 import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -88,5 +90,16 @@ public class UserService {
                     });
         }
         return response;
+    }
+
+    public StreamMetadataResponse updateStreamMetadata(StreamMetadataRequest request, UUID userId) {
+        StreamMetadata streamMetadata = streamMetadataRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Stream Metadata not found!"));
+
+        Optional.ofNullable(request.getTitle()).ifPresent(streamMetadata::setTitle);
+        Optional.ofNullable(request.getDescription()).ifPresent(streamMetadata::setDescription);
+        StreamMetadata _streamMetadata = streamMetadataRepository.save(streamMetadata);
+
+        return objectMapper.convertValue(_streamMetadata, StreamMetadataResponse.class);
     }
 }
