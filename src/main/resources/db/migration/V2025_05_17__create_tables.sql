@@ -15,6 +15,13 @@ CREATE TABLE IF NOT EXISTS streams (
 -- Create index for streams
 Create INDEX idx_stream_stream_key ON streams(stream_key);
 
+-- Create Stream Metadata table
+CREATE TABLE IF NOT EXISTS streams_metadata (
+    user_id PRIMARY KEY,
+    title VARCHAR NOT NULL,
+    description VARCHAR
+)
+
 -- Create roles table
 CREATE TABLE edge.roles (
     id UUID PRIMARY KEY,

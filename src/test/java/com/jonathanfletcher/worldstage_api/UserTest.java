@@ -7,8 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 
 public class UserTest extends BaseTest {
 
@@ -22,11 +21,13 @@ public class UserTest extends BaseTest {
         .when()
             .get("/users/{userId}")
         .then()
+                .log().all()
             .statusCode(HttpStatus.SC_OK)
             .body("id", equalTo(user.getId().toString()))
             .body("email", equalTo(user.getEmail()))
             .body("username", equalTo(user.getUsername()))
-            .body("activeStream", nullValue());
+            .body("activeStream", nullValue())
+            .body("streamMetadata.title", notNullValue());
     }
 
     @Test
