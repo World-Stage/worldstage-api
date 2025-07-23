@@ -100,7 +100,7 @@ public abstract class BaseTest {
             .queryParam("name", streamKey)
             .queryParam("secret", nginxSecret)
         .when()
-            .post("/stream/publish")
+            .post("/streams/publish")
         .then()
             .statusCode(HttpStatus.SC_OK)
             .body("id", notNullValue())
@@ -113,7 +113,7 @@ public abstract class BaseTest {
 
     protected StreamResponse getActiveStream() {
         return when()
-                .get("/stream/view/active")
+                .get("/streams/view/active")
             .then()
                 .statusCode(HttpStatus.SC_OK)
                 .body("id", notNullValue())

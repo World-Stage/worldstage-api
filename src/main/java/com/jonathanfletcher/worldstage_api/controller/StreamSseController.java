@@ -16,7 +16,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @RestController
-@RequestMapping(path = "/stream/view") //TODO Probably change view to active as we want to subscribe to active
+@RequestMapping(path = "/streams/view") //TODO Probably change view to active as we want to subscribe to active
 public class StreamSseController {
 
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();

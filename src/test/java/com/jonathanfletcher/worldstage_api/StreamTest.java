@@ -71,7 +71,7 @@ public class StreamTest extends BaseTest {
             .queryParam("name", user.getStreamKey())
             .queryParam("secret", nginxSecret)
         .when()
-            .post("/stream/publish")
+            .post("/streams/publish")
         .then()
             .statusCode(HttpStatus.SC_OK)
             .body("id", notNullValue())
@@ -89,7 +89,7 @@ public class StreamTest extends BaseTest {
         StreamResponse activeStream = publishStream(user.getStreamKey());
 
         when()
-            .get("/stream/view/active")
+            .get("/streams/view/active")
         .then()
             .statusCode(HttpStatus.SC_OK)
         .body("id", notNullValue())
@@ -103,12 +103,12 @@ public class StreamTest extends BaseTest {
             .queryParam("name", activeStream.getStreamKey())
             .queryParam("secret", nginxSecret)
         .when()
-            .post("/stream/unpublish")
+            .post("/streams/unpublish")
         .then()
             .statusCode(HttpStatus.SC_NO_CONTENT);
 
         when()
-            .get("/stream/view/active")
+            .get("/streams/view/active")
         .then()
             .statusCode(HttpStatus.SC_NOT_FOUND);
 
@@ -120,7 +120,7 @@ public class StreamTest extends BaseTest {
         StreamResponse stream = publishStream(user.getStreamKey());
 
         when()
-            .get("/stream/view/active")
+            .get("/streams/view/active")
         .then()
             .statusCode(HttpStatus.SC_OK)
             .body("id", notNullValue())
@@ -137,7 +137,7 @@ public class StreamTest extends BaseTest {
         given()
             .pathParams("streamId", stream.getId())
         .when()
-            .get("/stream/{streamId}")
+            .get("/streams/{streamId}")
         .then()
             .statusCode(HttpStatus.SC_OK)
             .body("id", equalTo(stream.getId().toString()))
@@ -151,7 +151,7 @@ public class StreamTest extends BaseTest {
         given()
             .pathParams("streamId", UUID.randomUUID())
         .when()
-            .get("/stream/{streamId}")
+            .get("/streams/{streamId}")
         .then()
             .statusCode(HttpStatus.SC_NOT_FOUND);
     }
@@ -167,7 +167,7 @@ public class StreamTest extends BaseTest {
         StreamResponse stream2 = publishStream(secondUser.getStreamKey());
 
         when()
-            .get("/stream/view/active")
+            .get("/streams/view/active")
         .then()
             .statusCode(HttpStatus.SC_OK)
             .body("id", notNullValue())
@@ -187,7 +187,7 @@ public class StreamTest extends BaseTest {
         StreamResponse stream = publishStream(user.getStreamKey());
 
         when()
-            .get("/stream/view/active")
+            .get("/streams/view/active")
         .then()
             .statusCode(HttpStatus.SC_OK)
             .body("id", notNullValue())
@@ -199,7 +199,7 @@ public class StreamTest extends BaseTest {
         Thread.sleep(17000);
 
         when()
-            .get("/stream/view/active")
+            .get("/streams/view/active")
         .then()
         .statusCode(HttpStatus.SC_OK)
             .body("id", notNullValue())
@@ -215,7 +215,7 @@ public class StreamTest extends BaseTest {
             .queryParam("name", UUID.randomUUID())
             .queryParam("secret", nginxSecret)
         .when()
-            .post("/stream/publish")
+            .post("/streams/publish")
         .then()
             .statusCode(HttpStatus.SC_UNAUTHORIZED);
     }
@@ -228,8 +228,53 @@ public class StreamTest extends BaseTest {
             .queryParam("name", user.getStreamKey())
             .queryParam("secret", nginxSecret)
         .when()
-            .post("/stream/publish")
+            .post("/streams/publish")
         .then()
             .statusCode(HttpStatus.SC_CONFLICT);
+    }
+
+    @Test
+    void canUnpublishSpecificStream() {
+        addAuth(user.getId());
+
+        StreamResponse stream = publishStream(user.getStreamKey());
+
+        given()
+            .pathParams("streamId", stream.getId())
+        .when()
+            .delete("/streams/{streamId}/unpublish")
+        .then()
+            .statusCode(HttpStatus.SC_OK);
+    }
+
+    @Test
+    void cannotUnpublishStreamThatDoesNotExist() {
+        addAuth(user.getId());
+
+        given()
+            .pathParams("streamId", UUID.randomUUID())
+        .when()
+            .delete("/streams/{streamId}/unpublish")
+        .then()
+            .statusCode(HttpStatus.SC_NOT_FOUND);
+    }
+
+    @Test
+    void cannotUnpublishOtherUsersStream() {
+        UserResponse badUser = createUser(UserCreateRequest.builder()
+                .username("test1")
+                .email("test1@test.com")
+                .password("test")
+                .build()).getUser();
+        StreamResponse stream = publishStream(badUser.getStreamKey());
+
+        addAuth(user.getId());
+
+        given()
+            .pathParams("streamId", stream.getId())
+        .when()
+            .delete("/streams/{streamId}/unpublish")
+        .then()
+            .statusCode(HttpStatus.SC_FORBIDDEN);
     }
 }

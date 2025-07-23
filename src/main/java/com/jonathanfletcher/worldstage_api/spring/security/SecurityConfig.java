@@ -53,7 +53,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/stream/**", "/ws/**").permitAll()
+                        .requestMatchers("/auth/**", "/streams/**", "/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasRole(ERole.ADMIN.toString())
                         .requestMatchers("/mock/**").permitAll()
                         .anyRequest().authenticated()

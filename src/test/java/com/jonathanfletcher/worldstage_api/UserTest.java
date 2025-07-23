@@ -127,7 +127,7 @@ public class UserTest extends BaseTest {
             .body("streamKey", not(user.getStreamKey().toString()));
 
         when()
-            .get("/stream/view/active")
+            .get("/streams/view/active")
         .then()
             .statusCode(HttpStatus.SC_NOT_FOUND);
     }

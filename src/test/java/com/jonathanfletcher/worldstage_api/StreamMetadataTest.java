@@ -111,7 +111,7 @@ public class StreamMetadataTest extends BaseTest {
             .body("title", equalTo(request.getTitle()));
 
         when()
-            .get("/stream/view/active")
+            .get("/streams/view/active")
         .then()
             .statusCode(HttpStatus.SC_OK)
             .body("id", notNullValue())
