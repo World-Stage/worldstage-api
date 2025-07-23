@@ -78,7 +78,8 @@ public class StreamTest extends BaseTest {
             .body("streamKey", equalTo(user.getStreamKey().toString()))
             .body("rtmpUrl", notNullValue())
             .body("hlsUrl", notNullValue())
-            .body("title", notNullValue());
+            .body("title", notNullValue())
+            .body("user.id", equalTo(user.getId().toString()));
 
         Mockito.verify(mockTranscoderController).startTranscoding(user.getStreamKey());
     }

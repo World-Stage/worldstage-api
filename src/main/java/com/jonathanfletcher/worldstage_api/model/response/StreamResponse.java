@@ -45,4 +45,6 @@ public class StreamResponse {
     private String description;
 
     private StreamStatus status;
+
+    private UserResponse user;
 }

@@ -9,6 +9,7 @@ import com.jonathanfletcher.worldstage_api.model.entity.Stream;
 import com.jonathanfletcher.worldstage_api.model.entity.StreamMetadata;
 import com.jonathanfletcher.worldstage_api.model.entity.User;
 import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
+import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
 import com.jonathanfletcher.worldstage_api.proxy.TranscoderProxy;
 import com.jonathanfletcher.worldstage_api.repository.StreamMetadataRepository;
 import com.jonathanfletcher.worldstage_api.repository.StreamRepository;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -71,7 +73,10 @@ public class StreamService {
         Stream _stream = streamRepository.save(stream);
         streamQueueService.addStreamToQueue(_stream);
         log.info("Stream published: {}", streamKey);
-        return objectMapper.convertValue(_stream, StreamResponse.class);
+
+        StreamResponse streamResponse = objectMapper.convertValue(stream, StreamResponse.class);
+        streamResponse.setUser(objectMapper.convertValue(user, UserResponse.class));
+        return streamResponse;
     }
 
     public void unPublishStream(UUID streamKey) {
@@ -95,14 +100,24 @@ public class StreamService {
         return streamRepository.findByActiveTrue()
                 .map(stream -> {
                     log.info("Found active stream {}", stream.getId());
-                    return objectMapper.convertValue(stream, StreamResponse.class);
+                    StreamResponse streamResponse = objectMapper.convertValue(stream, StreamResponse.class);
+                    userRepository.findById(stream.getUserId()).ifPresent(user -> {
+                        streamResponse.setUser(objectMapper.convertValue(user, UserResponse.class));
+                    });
+                    return streamResponse;
                 })
                 .orElseThrow(() -> new EntityNotFoundException("No active stream"));
     }
 
     public StreamResponse getStream(UUID streamId) {
         return streamRepository.findById(streamId)
-                .map(stream -> objectMapper.convertValue(stream, StreamResponse.class))
+                .map(stream -> {
+                    StreamResponse streamResponse = objectMapper.convertValue(stream, StreamResponse.class);
+                    userRepository.findById(stream.getUserId()).ifPresent(user -> {
+                        streamResponse.setUser(objectMapper.convertValue(user, UserResponse.class));
+                    });
+                    return streamResponse;
+                })
                 .orElseThrow(() -> new EntityNotFoundException(String.format("Stream %s not found", streamId)));
     }
 }
