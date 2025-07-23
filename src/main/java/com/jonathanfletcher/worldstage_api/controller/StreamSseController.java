@@ -1,5 +1,6 @@
 package com.jonathanfletcher.worldstage_api.controller;
 
+import com.jonathanfletcher.worldstage_api.model.response.StreamMetadataResponse;
 import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +16,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @RestController
-@RequestMapping(path = "/stream/view") //TODO Probably change view to active as we want to subscribe to active
+@RequestMapping(path = "/streams/view") //TODO Probably change view to active as we want to subscribe to active
 public class StreamSseController {
 
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
@@ -48,7 +49,13 @@ public class StreamSseController {
         emitMessage("stream-ended", Map.of(
                 "timestamp", Instant.now().getEpochSecond(),
                 "message", "No active stream available"
-        ));    }
+        ));
+    }
+
+    public void notifyActiveStreamMetadataChange(StreamMetadataResponse streamMetadata) {
+        log.info("Sending SSE for active stream metadata change");
+        emitMessage("stream-metadata-update", streamMetadata );
+    }
 
     private <T> void emitMessage(String name, T data) {
         List<SseEmitter> deadEmitters = new java.util.ArrayList<>();

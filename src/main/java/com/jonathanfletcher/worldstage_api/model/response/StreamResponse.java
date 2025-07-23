@@ -24,6 +24,8 @@ import java.util.UUID;
         "rtmpUrl",
         "hlsUrl",
         "active",
+        "title",
+        "description",
         "status",
 })
 public class StreamResponse {
@@ -38,5 +40,11 @@ public class StreamResponse {
 
     private Boolean active;
 
+    private String title;
+
+    private String description;
+
     private StreamStatus status;
+
+    private UserResponse user;
 }

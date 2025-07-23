@@ -7,30 +7,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-import java.util.UUID;
-
 @Builder
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserResponse {
+public class StreamMetadataResponse {
 
-    private UUID id;
+    private String title;
 
-    private String email;
-
-    private String username;
-
-    private UUID streamKey;
-
-    private StreamResponse activeStream;
-
-    private StreamMetadataResponse streamMetadata;
-
-    private Instant createdTs;
-
-    private Instant lastModifiedTs;
+    private String description;
 }

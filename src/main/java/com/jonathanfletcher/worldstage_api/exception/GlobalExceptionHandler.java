@@ -66,6 +66,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildErrorResponse(exception, HttpStatus.CONFLICT, webRequest);
     }
 
+    @ExceptionHandler({InvalidStreamKeyException.class})
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<Object> handleInvalidStreamKeyException(InvalidStreamKeyException exception, ServletWebRequest webRequest) {
+        return buildErrorResponse(exception, HttpStatus.UNAUTHORIZED, webRequest);
+    }
+
     private ResponseEntity<Object> buildErrorResponse(Exception exception, HttpStatusCode httpStatus, ServletWebRequest webRequest) {
         String errorMessage = StringUtils.substringBefore(exception.getMessage(), ';');
 

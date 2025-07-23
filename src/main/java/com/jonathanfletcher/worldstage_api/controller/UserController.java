@@ -1,22 +1,18 @@
 package com.jonathanfletcher.worldstage_api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jonathanfletcher.worldstage_api.model.IsUser;
 import com.jonathanfletcher.worldstage_api.model.entity.User;
-import com.jonathanfletcher.worldstage_api.model.request.UserCreateRequest;
+import com.jonathanfletcher.worldstage_api.model.request.StreamMetadataRequest;
+import com.jonathanfletcher.worldstage_api.model.response.StreamMetadataResponse;
 import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
-import com.jonathanfletcher.worldstage_api.repository.UserRepository;
 import com.jonathanfletcher.worldstage_api.service.UserService;
-import com.jonathanfletcher.worldstage_api.spring.security.model.ERole;
-import com.jonathanfletcher.worldstage_api.spring.security.model.entity.Role;
-import com.jonathanfletcher.worldstage_api.spring.security.repository.RoleRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -27,17 +23,28 @@ public class UserController {
 
     private final UserService userService;
 
-//    @PostMapping
-//    public ResponseEntity<UserResponse> createUser(@RequestBody @Valid UserCreateRequest request) {
-//        log.info("A new user is trying to sign up with email: {}", request.getEmail());
-//
-//        return ResponseEntity.ok(userService.registerUser(request));
-//    }
-
     @GetMapping(path = "/{userId}")
-    public ResponseEntity<UserResponse> getUser(@PathVariable UUID userId) {
-        log.info("Request received to get user {}", userId);
+    public ResponseEntity<UserResponse> getUser(@PathVariable UUID userId, @AuthenticationPrincipal User userDetails) {
+        boolean isUserPrincipal = userId.equals(userDetails.getId());
+        log.info("Request received to get user {} with isUserPrincipal {}", userId, isUserPrincipal);
 
-        return ResponseEntity.ok(userService.getUser(userId));
+        return ResponseEntity.ok(userService.getUser(userId, isUserPrincipal));
+    }
+
+    @IsUser
+    @PatchMapping(path = "/{userId}/streamMetadata")
+    public ResponseEntity<StreamMetadataResponse> updateStreamMetadata(@PathVariable UUID userId,
+                                                                       @Valid @RequestBody StreamMetadataRequest request) {
+        log.info("Updating user {} stream metadata", userId);
+
+        return ResponseEntity.ok(userService.updateStreamMetadata(request, userId));
+    }
+
+    @IsUser
+    @PostMapping(path = "/{userId}/regenerateStreamKey")
+    public ResponseEntity<UserResponse> regenerateStreamKey(@PathVariable UUID userId) {
+        log.info("User {} is trying to regenerate stream key", userId);
+
+        return ResponseEntity.ok(userService.regenerateStreamKey(userId));
     }
 }

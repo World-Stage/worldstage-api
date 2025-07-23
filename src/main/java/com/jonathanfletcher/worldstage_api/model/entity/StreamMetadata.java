@@ -1,7 +1,10 @@
 package com.jonathanfletcher.worldstage_api.model.entity;
 
-import com.jonathanfletcher.worldstage_api.model.StreamStatus;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -11,36 +14,23 @@ import java.util.UUID;
 
 @Builder
 @Entity
-@Table(name = "streams", schema = "edge")
+@Table(name = "streams_metadata", schema = "edge")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @ToString
-public class Stream {
+public class StreamMetadata {
 
     @Id
-    private UUID id;
-
-    @NonNull
-    private UUID streamKey;
-
-    private String rtmpUrl;
-
-    @NonNull
-    private String hlsUrl;
-
-    @NonNull
     private UUID userId;
 
-    private Boolean active;
-
+    @NonNull
+    @Size(max = 100)
     private String title;
 
+    @Size(max = 1000)
     private String description;
-
-    @Enumerated(EnumType.STRING)
-    private StreamStatus status;
 
     @CreationTimestamp
     private Instant createdTs;
