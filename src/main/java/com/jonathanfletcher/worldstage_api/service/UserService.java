@@ -1,6 +1,7 @@
 package com.jonathanfletcher.worldstage_api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jonathanfletcher.worldstage_api.controller.StreamSseController;
 import com.jonathanfletcher.worldstage_api.exception.EntityConflictException;
 import com.jonathanfletcher.worldstage_api.exception.EntityNotFoundException;
 import com.jonathanfletcher.worldstage_api.model.entity.StreamMetadata;
@@ -40,6 +41,10 @@ public class UserService {
     private final StreamRepository streamRepository;
 
     private final ObjectMapper objectMapper;
+
+    private final StreamService streamService;
+
+    private final StreamSseController streamSseController;
 
     public User registerUser(UserCreateRequest request) {
         if (userRepository.existsByUsername(request.getUsername().toLowerCase())) {
@@ -100,6 +105,20 @@ public class UserService {
         Optional.ofNullable(request.getDescription()).ifPresent(streamMetadata::setDescription);
         StreamMetadata _streamMetadata = streamMetadataRepository.save(streamMetadata);
 
-        return objectMapper.convertValue(_streamMetadata, StreamMetadataResponse.class);
+        StreamMetadataResponse streamMetadataResponse = objectMapper.convertValue(_streamMetadata, StreamMetadataResponse.class);
+
+        streamRepository.findByUserIdAndActiveTrue(userId)
+            .flatMap(stream -> streamRepository.findByActiveTrue()
+                    .filter(activeStream -> stream.getId().equals(activeStream.getId()))
+            )
+            .ifPresent(activeStream -> {
+                log.info("Metadata Update is for active stream");
+                activeStream.setTitle(_streamMetadata.getTitle());
+                activeStream.setDescription(_streamMetadata.getDescription());
+                streamRepository.save(activeStream);
+                streamSseController.notifyActiveStreamMetadataChange(streamMetadataResponse);
+            });
+
+        return streamMetadataResponse;
     }
 }

@@ -35,6 +35,10 @@ public class Stream {
 
     private Boolean active;
 
+    private String title;
+
+    private String description;
+
     @Enumerated(EnumType.STRING)
     private StreamStatus status;
 

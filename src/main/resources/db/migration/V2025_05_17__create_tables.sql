@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS streams (
   user_id UUID NOT NULL,
   active BOOLEAN DEFAULT false,
   status VARCHAR,
+  title VARCHAR,
+  description VARCHAR,
   created_ts TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_modified_ts TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -17,21 +19,21 @@ Create INDEX idx_stream_stream_key ON streams(stream_key);
 
 -- Create Stream Metadata table
 CREATE TABLE IF NOT EXISTS streams_metadata (
-    user_id PRIMARY KEY,
+    user_id UUID PRIMARY KEY,
     title VARCHAR NOT NULL,
     description VARCHAR,
     created_ts TIMESTAMPTZ NOT NULL DEFAULT now(),
     last_modified_ts TIMESTAMPTZ NOT NULL DEFAULT now()
-)
+);
 
 -- Create roles table
-CREATE TABLE edge.roles (
+CREATE TABLE IF NOT EXISTS edge.roles (
     id UUID PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL
 );
 
 -- Create users table
-CREATE TABLE edge.users (
+CREATE TABLE IF NOT EXISTS edge.users (
     id UUID PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(50) NOT NULL UNIQUE,
@@ -44,7 +46,7 @@ CREATE TABLE edge.users (
 Create INDEX idx_user_stream_key ON users(stream_key);
 
 -- Create join table for users and roles
-CREATE TABLE edge.users_roles (
+CREATE TABLE IF NOT EXISTS edge.users_roles (
     user_id UUID NOT NULL,
     role_id UUID NOT NULL,
     PRIMARY KEY (user_id, role_id),
@@ -53,7 +55,7 @@ CREATE TABLE edge.users_roles (
 );
 
 -- Create refresh_token table
-CREATE TABLE edge.refresh_token (
+CREATE TABLE IF NOT EXISTS edge.refresh_token (
     id UUID PRIMARY KEY,
     token_hash VARCHAR(255) NOT NULL,
     family_id UUID NOT NULL,
