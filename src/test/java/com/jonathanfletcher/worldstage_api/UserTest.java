@@ -57,7 +57,6 @@ public class UserTest extends BaseTest {
 
         given()
             .pathParams("userId", user.getId())
-            .queryParam("returnActiveStream", true)
         .when()
             .get("/users/{userId}")
         .then()
