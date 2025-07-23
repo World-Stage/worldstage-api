@@ -74,7 +74,7 @@ public class StreamService {
         streamQueueService.addStreamToQueue(_stream);
         log.info("Stream published: {}", streamKey);
 
-        StreamResponse streamResponse = objectMapper.convertValue(stream, StreamResponse.class);
+        StreamResponse streamResponse = objectMapper.convertValue(_stream, StreamResponse.class);
         streamResponse.setUser(objectMapper.convertValue(user, UserResponse.class));
         return streamResponse;
     }
