@@ -39,4 +39,12 @@ public class UserController {
 
         return ResponseEntity.ok(userService.updateStreamMetadata(request, userId));
     }
+
+    @IsUser
+    @PostMapping(path = "/{userId}/regenerateStreamKey")
+    public ResponseEntity<UserResponse> regenerateStreamKey(@PathVariable UUID userId) {
+        log.info("User {} is trying to regenerate stream key", userId);
+
+        return ResponseEntity.ok(userService.regenerateStreamKey(userId));
+    }
 }

@@ -68,10 +68,11 @@ public class UserService {
                                 .build());
                     })))
                     .build();
-            streamMetadataRepository.save(StreamMetadata.builder()
-                    .title(String.format("%s's stream", newUser.getUsername()))
-                    .userId(newUser.getId())
-                    .build());
+            StreamMetadata newStreamMetadata = StreamMetadata.builder()
+                .title(String.format("%s's stream", newUser.getUsername()))
+                .userId(newUser.getId())
+                .build();
+            streamMetadataRepository.save(newStreamMetadata);
             return userRepository.save(newUser);
     }
 
@@ -87,10 +88,11 @@ public class UserService {
                         response.setStreamMetadata(objectMapper.convertValue(metadata, StreamMetadataResponse.class));
                     }, () -> {
                         log.warn("No Stream Metadata set for user {}", user.getId());
-                        StreamMetadata metadata = streamMetadataRepository.save(StreamMetadata.builder()
+                        StreamMetadata metadata = StreamMetadata.builder()
                                 .title(String.format("%s's stream", user.getUsername()))
                                 .userId(user.getId())
-                                .build());
+                                .build();
+                        streamMetadataRepository.save(metadata);
                         response.setStreamMetadata(objectMapper.convertValue(metadata, StreamMetadataResponse.class));
                     });
         }
@@ -120,5 +122,19 @@ public class UserService {
             });
 
         return streamMetadataResponse;
+    }
+
+    public UserResponse regenerateStreamKey(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User does not exist"));
+        streamRepository.findByUserIdAndActiveTrue(user.getId()).ifPresent(stream -> {
+            log.info("User {} is regenerating stream key when live (stream {}, ending current stream", userId, stream.getId());
+            streamService.unPublishStream(stream.getStreamKey());
+        });
+
+        user.setStreamKey(UUID.randomUUID());
+        User _user = userRepository.save(user);
+        log.info("Update stream key for user {}", user.getId());
+
+        return objectMapper.convertValue(_user, UserResponse.class);
     }
 }

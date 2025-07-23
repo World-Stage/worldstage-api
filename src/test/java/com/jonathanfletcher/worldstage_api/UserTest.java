@@ -1,9 +1,13 @@
 package com.jonathanfletcher.worldstage_api;
 
+import com.jonathanfletcher.worldstage_api.model.StreamStatus;
 import com.jonathanfletcher.worldstage_api.model.response.AuthResponse;
+import com.jonathanfletcher.worldstage_api.model.response.StreamResponse;
 import com.jonathanfletcher.worldstage_api.model.response.UserResponse;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
@@ -79,5 +83,52 @@ public class UserTest extends BaseTest {
             .body("id", equalTo(user.getId().toString()))
             .body("username", equalTo(user.getUsername()))
             .body("activeStream", nullValue());
+    }
+
+    @Test
+    void canRegenerateStreamKey() {
+        UserResponse user = createUser().getUser();
+        addAuth(user.getId());
+
+        given()
+            .pathParams("userId", user.getId())
+        .when()
+            .post("/users/{userId}/regenerateStreamKey")
+        .then()
+            .statusCode(HttpStatus.SC_OK)
+            .body("streamKey", not(user.getStreamKey().toString()));
+    }
+
+    @Test
+    void cannotRegenerateOtherUsersKey() {
+        UserResponse user = createUser().getUser();
+        addAuth(user.getId());
+
+        given()
+            .pathParams("userId", UUID.randomUUID())
+        .when()
+            .post("/users/{userId}/regenerateStreamKey")
+        .then()
+            .statusCode(HttpStatus.SC_FORBIDDEN);
+    }
+
+    @Test
+    void updatingStreamKeyWhenLiveUnpublishesStream() {
+        UserResponse user = createUser().getUser();
+        addAuth(user.getId());
+        StreamResponse stream = publishStream(user.getStreamKey());
+
+        given()
+            .pathParams("userId", user.getId())
+        .when()
+            .post("/users/{userId}/regenerateStreamKey")
+        .then()
+            .statusCode(HttpStatus.SC_OK)
+            .body("streamKey", not(user.getStreamKey().toString()));
+
+        when()
+            .get("/stream/view/active")
+        .then()
+            .statusCode(HttpStatus.SC_NOT_FOUND);
     }
 }

@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -45,10 +44,14 @@ public class StreamService {
             throw new EntityConflictException("Stream is already active");
         });
 
-        StreamMetadata streamMetadata = streamMetadataRepository.findById(user.getId()).orElse(streamMetadataRepository.save(StreamMetadata.builder()
-                .title(String.format("%s's stream", user.getUsername()))
-                .userId(user.getId())
-                .build()));
+        StreamMetadata streamMetadata = streamMetadataRepository.findById(user.getId()).orElseGet(() -> {
+            log.warn("No Stream Metadata set for user {}", user.getId());
+            StreamMetadata newStreamMetadata = StreamMetadata.builder()
+                    .title(String.format("%s's stream", user.getUsername()))
+                    .userId(user.getId())
+                    .build();
+            return streamMetadataRepository.save(newStreamMetadata);
+        });
 
         String rtmpUrl = "rtmp://nginx-rtmp:1935/live/" + streamKey;
         String hlsUrl = "http://nginx-rtmp:8080/hls/" + streamKey + "/index.m3u8";
