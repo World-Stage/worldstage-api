@@ -1,17 +1,19 @@
 spring:
   datasource:
-    url: jdbc:postgresql://db:5433/mydb
+    url: ${DATABASE_URL}
     driverClassName: org.postgresql.Driver
-    username: username
-    password: password
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
+  security:
+    jwt:
+      access-secret: ${ACCESS_SECRET}
+      refresh-secret: ${REFRESH_SECRET}
 
 proxy:
   transcoder:
-    base-url: http://transcoder-worker:3001
+    base-url: http://transcoder-worker.internal:3001
 
 cors:
   allowed-headers:
@@ -29,6 +31,5 @@ cors:
     - Location
     - Access-Control-Allow-Origin
   allowed-origins:
-    - http://localhost
-    - http://localhost:80
-    - http://localhost:3000
+    - https://stagio.live
+    - https://www.stagio.live
