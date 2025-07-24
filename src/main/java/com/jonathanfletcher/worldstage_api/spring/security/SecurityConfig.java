@@ -56,6 +56,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**", "/streams/**", "/ws/**").permitAll()
                         .requestMatchers("/admin/**").hasRole(ERole.ADMIN.toString())
                         .requestMatchers("/mock/**").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
 //                .csrf(csrf -> csrf
@@ -92,17 +93,15 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("http://localhost", "http://localhost:80", "http://localhost:3000"));
+        log.info("CORS is enabled, configuring with allowed origins: {}", corsProperties.getAllowedOrigins());
+
+        corsProperties.getAllowedOrigins().forEach(configuration::addAllowedOrigin);
+        configuration.addAllowedMethod("*");
+        corsProperties.getAllowedHeaders().forEach(configuration::addAllowedHeader);
         configuration.setAllowCredentials(true);
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With"));
-//        configuration.setExposedHeaders(List.of("Content-Type", "Access-Control-Allow-Origin"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new
+                UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-
-        log.info("CORS configured for origin patterns: {}", configuration.getAllowedOriginPatterns());
-
         return source;
     }
 
