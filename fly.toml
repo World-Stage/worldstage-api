@@ -10,6 +10,14 @@ memory = 2048
 cpu_kind = "shared"
 cpus = 2
 
+# Required for HTTPS routing
+[http_service]
+internal_port = 8082
+force_https = true
+auto_stop_machines = "timeout"
+auto_start_machines = true
+processes = ["app"]
+
 [[services]]
 internal_port = 8082
 protocol = "tcp"
@@ -24,7 +32,7 @@ handlers = ["tls", "http"]
 
 [services.http_checks]
 path = "/actuator/health"
-interval = 10000  # 10 seconds in ms
-timeout = 5000    # 5 seconds in ms
+interval = 10000
+timeout = 5000
 grace_period = "30s"
 method = "GET"
