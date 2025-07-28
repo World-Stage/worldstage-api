@@ -1,33 +1,24 @@
-# fly.toml app configuration file generated for stagio-api on 2025-07-23T18:23:19-06:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
-app = 'stagio-api'
-primary_region = 'iad'
-
-[build]
-
-[http_service]
-  internal_port = 8082
-  force_https = true
-  auto_stop_machines = 'stop'
-  auto_start_machines = true
-  min_machines_running = 0
-  processes = ['app']
-
-[[vm]]
-  memory = '1gb'
-  cpu_kind = 'shared'
-  cpus = 2
+app = "stagio-api"
+primary_region = "iad"
 
 [env]
-  SPRING_PROFILES_ACTIVE = "production"
+SPRING_PROFILES_ACTIVE = "production"
 
-[checks]
-  [checks.status]
-    type = "http"
-    port = 8082
-    path = "/actuator/health"
-    interval = "10s"
-    timeout = "5s"
+[[services]]
+internal_port = 8082
+protocol = "tcp"
+
+[[services.ports]]
+port = 80
+handlers = ["http"]
+
+[[services.ports]]
+port = 443
+handlers = ["tls", "http"]
+
+[services.http_checks]
+path = "/actuator/health"
+interval = 10000  # 10 seconds in ms
+timeout = 5000    # 5 seconds in ms
+grace_period = "30s"
+method = "GET"
