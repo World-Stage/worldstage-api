@@ -17,6 +17,7 @@ spring:
       max-file-size: 20MB
       max-request-size: 20MB
   flyway:
+    schemas: edge
     defaultSchema: edge
     locations: classpath:db/migration
     baseline-on-migrate: true
