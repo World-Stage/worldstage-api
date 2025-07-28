@@ -1,4 +1,5 @@
 spring:
+  address: 0.0.0.0
   datasource:
     url: ${DATABASE_URL}
     driverClassName: org.postgresql.Driver
