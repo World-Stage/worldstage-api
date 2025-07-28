@@ -12,6 +12,7 @@ spring:
       refresh-secret: ${REFRESH_SECRET}
 
 server:
+  port: ${PORT:8082}
   address: 0.0.0.0
 
 proxy:
