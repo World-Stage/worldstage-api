@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Builder
 @Entity
-@Table(name = "streams_metadata", schema = "edge")
+@Table(name = "streams_metadata")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

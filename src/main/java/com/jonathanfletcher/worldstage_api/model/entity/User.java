@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Builder
 @Entity
-@Table(name = "users", schema = "edge",
+@Table(name = "users",
         uniqueConstraints = {@UniqueConstraint(columnNames = "username"),
                 @UniqueConstraint(columnNames = "email"), @UniqueConstraint(columnNames = "streamKey")})
 @AllArgsConstructor
@@ -54,7 +54,6 @@ public class User implements UserDetails {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",
-            schema = "edge",
             joinColumns = @JoinColumn(
                     name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(

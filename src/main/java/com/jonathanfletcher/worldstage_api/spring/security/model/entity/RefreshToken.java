@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Builder
 @Entity
-@Table(name = "refresh_token", schema = "edge")
+@Table(name = "refresh_token")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

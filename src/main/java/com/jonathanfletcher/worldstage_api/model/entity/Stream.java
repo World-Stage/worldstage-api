@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Builder
 @Entity
-@Table(name = "streams", schema = "edge")
+@Table(name = "streams")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

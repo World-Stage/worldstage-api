@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;init=CREATE SCHEMA IF NOT EXISTS edge
+    url: jdbc:h2:mem:testdb;
     driverClassName: org.h2.Driver
     username: sa
     password: password

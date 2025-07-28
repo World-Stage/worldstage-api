@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Builder
 @Entity
-@Table(name = "roles", schema = "edge")
+@Table(name = "roles")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
