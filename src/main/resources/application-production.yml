@@ -1,5 +1,4 @@
 spring:
-  address: 0.0.0.0
   datasource:
     url: ${DATABASE_URL}
     driverClassName: org.postgresql.Driver
@@ -11,6 +10,9 @@ spring:
     jwt:
       access-secret: ${ACCESS_SECRET}
       refresh-secret: ${REFRESH_SECRET}
+
+server:
+  address: 0.0.0.0
 
 proxy:
   transcoder:
