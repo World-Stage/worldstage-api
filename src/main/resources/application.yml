@@ -27,6 +27,9 @@ spring:
       nginx:
         secret: E3mJz0o0[3]k£oJ{vdWx{(22UI8r_i'A!-inys"q,y9Y;L?K~
 
+stream:
+  nginx-hostname: nginx-rtmp
+
 management:
   endpoints:
     web:

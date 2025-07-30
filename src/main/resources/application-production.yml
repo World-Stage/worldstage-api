@@ -20,9 +20,12 @@ server:
   port: ${SERVER_PORT:8082}
   address: 0.0.0.0
 
+stream:
+  nginx-hostname: stream-service.fly.dev
+
 proxy:
   transcoder:
-    base-url: http://transcoder-worker.internal:3001
+    base-url: https://stream-service.fly.dev:3001
 
 cors:
   allowed-headers:

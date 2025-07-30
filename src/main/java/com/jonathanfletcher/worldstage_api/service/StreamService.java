@@ -16,6 +16,7 @@ import com.jonathanfletcher.worldstage_api.repository.StreamRepository;
 import com.jonathanfletcher.worldstage_api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -38,6 +39,9 @@ public class StreamService {
 
     private final ObjectMapper objectMapper;
 
+    @Value("${stream.nginx-hostname}")
+    private String hostname;
+
     public StreamResponse publishStream(UUID streamKey) {
         //TODO: Verify streamkey is correct
         User user = userRepository.findByStreamKey(streamKey).orElseThrow(() -> new InvalidStreamKeyException("The stream key does not exist"));
@@ -55,8 +59,8 @@ public class StreamService {
             return streamMetadataRepository.save(newStreamMetadata);
         });
 
-        String rtmpUrl = "rtmp://nginx-rtmp:1935/live/" + streamKey;
-        String hlsUrl = "http://nginx-rtmp:8080/hls/" + streamKey + "/index.m3u8";
+        String rtmpUrl = "rtmp://" + hostname + ":1935/live/" + streamKey;
+        String hlsUrl = "http://" + hostname + ":8080/hls/" + streamKey + "/index.m3u8";
         Stream stream = Stream.builder()
                 .id(UUID.randomUUID())
                 .streamKey(user.getStreamKey())
