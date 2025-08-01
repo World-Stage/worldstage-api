@@ -1,6 +1,9 @@
 package com.jonathanfletcher.worldstage_api.spring.security.service;
 
+import com.jonathanfletcher.worldstage_api.property.CorsProperties;
 import com.jonathanfletcher.worldstage_api.spring.security.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -19,6 +22,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,6 +37,9 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
         this.jwtUtil = jwtUtil;
     }
 
+    @Autowired
+    private CorsProperties corsProperties;
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.setApplicationDestinationPrefixes("/app");
@@ -44,7 +51,7 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("http://localhost:80", "http://localhost", "http://localhost:3000")
+                .setAllowedOriginPatterns(corsProperties.getAllowedOrigins().toArray(new String[0]))
                 .withSockJS();
         log.info("WebSocket endpoint registered: /ws");
     }

@@ -25,7 +25,7 @@ stream:
 
 proxy:
   transcoder:
-    base-url: https://stream-service.fly.dev:3001
+    base-url: https://stream-service.fly.dev:3001 #TODO Update to use stagio.live domain
 
 cors:
   allowed-headers:
@@ -45,3 +45,4 @@ cors:
   allowed-origins:
     - https://stagio.live
     - https://www.stagio.live
+    - https://stagio-frontend.fly.dev
