@@ -10,13 +10,14 @@ memory = 2048
 cpu_kind = "shared"
 cpus = 2
 
-# Required for HTTPS routing
 [http_service]
 internal_port = 8082
 force_https = true
 auto_stop_machines = true
 auto_start_machines = true
 processes = ["app"]
+min_machines_running = 1
+max_machines_running = 1
 
 [[services]]
 internal_port = 8082

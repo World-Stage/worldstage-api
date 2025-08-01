@@ -17,6 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.messaging.context.SecurityContextChannelInterceptor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -60,7 +61,9 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
     public void configureClientInboundChannel(ChannelRegistration registration) {
         //TODO Figure out how to properly set principal. remove unused logs
 
-        registration.interceptors(new ChannelInterceptor() {
+        registration
+                .interceptors(new SecurityContextChannelInterceptor())
+                .interceptors(new ChannelInterceptor() {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
