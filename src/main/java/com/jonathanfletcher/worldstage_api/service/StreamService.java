@@ -39,8 +39,11 @@ public class StreamService {
 
     private final ObjectMapper objectMapper;
 
-    @Value("${stream.nginx-hostname}")
-    private String hostname;
+    @Value("${stream.nginx-rtmp}")
+    private String nginxRtmp;
+
+    @Value("${stream.nginx-hls}")
+    private String nginxHls;
 
     public StreamResponse publishStream(UUID streamKey) {
         //TODO: Verify streamkey is correct
@@ -59,8 +62,8 @@ public class StreamService {
             return streamMetadataRepository.save(newStreamMetadata);
         });
 
-        String rtmpUrl = "rtmp://" + hostname + ":1935/live/" + streamKey;
-        String hlsUrl = "http://" + hostname + ":8080/hls/" + streamKey + "/index.m3u8";
+        String rtmpUrl = nginxRtmp + ":1935/live/" + streamKey;
+        String hlsUrl = nginxHls + ":8080/hls/" + streamKey + "/index.m3u8";
         Stream stream = Stream.builder()
                 .id(UUID.randomUUID())
                 .streamKey(user.getStreamKey())

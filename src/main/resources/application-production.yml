@@ -21,7 +21,8 @@ server:
   address: 0.0.0.0
 
 stream:
-  nginx-hostname: stream-service.fly.dev
+  nginx-rtmp: rtmp://stream-service.fly.dev
+  nginx-hls: https://stream-service.fly.dev
 
 proxy:
   transcoder:

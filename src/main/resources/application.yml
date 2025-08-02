@@ -28,7 +28,8 @@ spring:
         secret: E3mJz0o0[3]k£oJ{vdWx{(22UI8r_i'A!-inys"q,y9Y;L?K~
 
 stream:
-  nginx-hostname: nginx-rtmp
+  nginx-rtmp: rtmp://nginx-rtmp
+  nginx-hls: http://nginx-rtmp
 
 management:
   endpoints:
