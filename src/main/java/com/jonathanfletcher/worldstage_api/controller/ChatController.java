@@ -19,8 +19,7 @@ public class ChatController {
 
     @MessageMapping("/send")
     @SendTo("/chat/messages")
-    @PreAuthorize("isAuthenticated()")
-    public ChatMessage handleMessage(ChatMessage message) {
+    public ChatMessage handleMessage(ChatMessage message, Principal principal) {
         //TODO Figure out how to use principal instead
 
         if (message.getMessageType() == null) {

@@ -23,6 +23,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -59,20 +60,22 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        //TODO Figure out how to properly set principal. remove unused logs
-
-        registration
-                .interceptors(new SecurityContextChannelInterceptor())
-                .interceptors(new ChannelInterceptor() {
+        registration.interceptors(new ChannelInterceptor() {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
                 StompCommand command = accessor.getCommand();
                 String sessionId = accessor.getSessionId();
 
-                if (StompCommand.CONNECT.equals(command)) {
-                    log.info("Processing CONNECT for session: {}", sessionId);
+                log.debug("Processing command: {} for session: {} on thread: {}",
+                        command, sessionId, Thread.currentThread().getId());
+
+                if (StompCommand.CONNECT.equals(command) ||
+                        StompCommand.SEND.equals(command) ||
+                        StompCommand.SUBSCRIBE.equals(command)) {
                     String authHeader = accessor.getFirstNativeHeader("Authorization");
+                    log.debug("Authorization header: {} for command: {}", authHeader, command);
+
                     Authentication auth;
                     if (authHeader != null && authHeader.startsWith("Bearer ")) {
                         String token = authHeader.substring(7);
@@ -99,30 +102,16 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
                         log.info("No Authorization header, setting anonymous for session: {}", sessionId);
                         auth = createAnonymousAuthentication();
                     }
-                    // Store authentication in session attributes and set in SecurityContext
-                    accessor.getSessionAttributes().put("authentication", auth);
-                    accessor.setUser(auth);
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                    log.debug("Set user: {} for session: {}", auth.getName(), sessionId);
-                } else {
-                    // Retrieve authentication from session attributes
-                    Authentication auth = (Authentication) accessor.getSessionAttributes().get("authentication");
-                    if (auth == null) {
-                        log.warn("No authentication found in session attributes for session: {}, command: {}",
-                                sessionId, command);
-                        auth = createAnonymousAuthentication();
-                        accessor.getSessionAttributes().put("authentication", auth);
-                    }
-                    accessor.setUser(auth);
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                    log.debug("Restored authentication for session: {}, command: {}, user: {}",
-                            sessionId, command, auth.getName());
 
+                    // Set the Principal for the message
+                    accessor.setUser(auth);
+
+                    // Authorization checks
                     if (StompCommand.SUBSCRIBE.equals(command)) {
                         String destination = accessor.getDestination();
                         log.info("Processing SUBSCRIBE to {} for session: {}", destination, sessionId);
                         if ("/chat/viewers".equals(destination) || "/chat/messages".equals(destination) || "/encore".equals(destination)) {
-                            return message;
+                            return message; // Allow public subscriptions
                         }
                         if (auth instanceof AnonymousAuthenticationToken) {
                             log.warn("Denied SUBSCRIBE to {}: Authentication required", destination);
@@ -131,19 +120,16 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
                     } else if (StompCommand.SEND.equals(command)) {
                         String destination = accessor.getDestination();
                         log.info("Processing SEND to {} for session: {}", destination, sessionId);
-                        log.debug("SEND AUTH: {}", auth);
                         if ("/app/send".equals(destination) || "/app/encore".equals(destination)) {
                             if (auth instanceof AnonymousAuthenticationToken) {
-                                log.warn("Denied SEND to {}: Authentication required (auth: {})", destination, auth);
+                                log.warn("Denied SEND to {}: Authentication required", destination);
                                 throw new SecurityException("Authentication required for sending to " + destination);
                             }
                             log.info("SEND allowed for user: {} to {}", auth.getName(), destination);
                         }
-                    } else if (StompCommand.DISCONNECT.equals(command)) {
-                        log.info("Processing DISCONNECT for session: {}", sessionId);
-                        accessor.getSessionAttributes().remove("authentication");
-                        SecurityContextHolder.clearContext();
                     }
+                } else if (StompCommand.DISCONNECT.equals(command)) {
+                    log.info("Processing DISCONNECT for session: {}", sessionId);
                 }
 
                 return message;
@@ -152,7 +138,7 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
             private Authentication createAnonymousAuthentication() {
                 return new AnonymousAuthenticationToken(
                         "anonymous", "anonymousUser",
-                        java.util.Collections.singletonList(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
             }
         });
     }
