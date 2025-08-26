@@ -29,7 +29,7 @@ spring:
 
 stream:
   nginx-rtmp: rtmp://nginx-rtmp
-  nginx-hls: http://nginx-rtmp
+  hls-host: http://transcoder-worker
 
 management:
   endpoints:
