@@ -21,12 +21,12 @@ server:
   address: 0.0.0.0
 
 stream:
-  nginx-rtmp: rtmp://stream-service.fly.dev:1935
-  hls-host: https://stream-service.fly.dev
+  nginx-rtmp: rtmp://nginx-rtmp-service.fly.dev
+  hls-host: https://transcoder-worker-service.fly.dev
 
 proxy:
   transcoder:
-    base-url: http://stream-service.fly.dev:3001 #TODO Update to use stagio.live domain
+    base-url: http://transcoder-worker-service.fly.dev #TODO Update to use stagio.live domain
 
 cors:
   allowed-headers:
